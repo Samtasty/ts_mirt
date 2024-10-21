@@ -29,8 +29,8 @@ class Student(object):
     def expected_response(self, item):
         return sigmoid(item.kcs@self.theta-item.difficulty)
     
-    def expected_response_irt(self, item):
-        return sigmoid(item.kcs@self.irt_theta-item.difficulty)
+    # def expected_response_irt(self, item):
+    #     return sigmoid(item.kcs@self.irt_theta-item.difficulty)
 
     
     def expected_response_pluriel(self, items):
@@ -40,7 +40,7 @@ class Student(object):
     def simulate_pluriel(self, items):
 
         b=self.expected_response_pluriel(items)
-        a=(np.random.uniform(low=0, high=1, size=b.shape)<b).astype(int)
+        a=(np.random.uniform(low=0, high=1, size=len(b))<b).astype(int)
         c=list(zip([items[j].id for j in range(len(items))],a))
         self.learning_trace+=c
         return a
@@ -53,17 +53,17 @@ class Student(object):
     def improvement(self,lrn_gains):
         self.theta += lrn_gains
 
-    def irt_improve(self, item, response, lrn_rate):
+    # def irt_improve(self, item, response, lrn_rate):
         
-        a=[sigmoid(item.kcs[j]*self.irt_theta[j]-item.difficulty) for j in range(len(item.kcs))]
-        error=response-a
-        self.irt_theta += lrn_rate*error
+    #     a=[sigmoid(item.kcs[j]*self.irt_theta[j]-item.difficulty) for j in range(len(item.kcs))]
+    #     error=response-a
+    #     self.irt_theta += lrn_rate*error
         
 
-    def  irt_update(self, item, response, lrn_rate):
-        b=self.expected_response(item)
-        error=response-b
-        self.improvement(lrn_rate*error)
+    # def  irt_update(self, item, response, lrn_rate):
+    #     b=self.expected_response(item)
+    #     error=response-b
+    #     self.improvement(lrn_rate*error)
 
     def erase_learning_trace(self,nb_events):
         self.learning_trace=self.learning_trace[:-nb_events] 
@@ -102,8 +102,9 @@ class BayesianStudent(Student):
             return -log_posterior_map(x,self.corpus,self.learning_trace,self.prior)
         w0 = self.prior.rvs()
         res = scipy.optimize.minimize(f, w0, method='BFGS')
+
         self.mu=res.x
-        self.sigma=-np.linalg.inv(solution.hess_inv)
+        self.sigma=np.linalg.inv(res.hess_inv)
         self.prior = multivariate_normal(mean=self.mu, cov=self.sigma)
 
     def expected_proxi(self,item):
