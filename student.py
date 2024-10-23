@@ -76,10 +76,14 @@ class BayesianStudent(Student):
         )  # prior distribution of theta estimate
         self.corpus = Corpus
         self.theta_history = [self.prior]
+        self.mu_history=[mu]
+        self.sigma_history=[sigma]
+        self.sampled_theta_history=[mu]
 
     # to saple a theta from the prior
     def sample_distribution(self):
         self.sampled_theta = self.prior.rvs()
+        self.sampled_theta_history.append(self.sampled_theta.copy())
 
     # to estimate expected correctnes probability from a theta sampled from the prior
     def expected_response_bayesian(self, item):
@@ -116,7 +120,7 @@ class BayesianStudent(Student):
         Returns:
             list: list of expected rewards
         """
-        b = [self.expected_reward(items[j].id) for j in range(len(items))]
+        b = {items[j].id: self.expected_reward(items[j].id) for j in range(len(items))}
 
         return b
 
@@ -157,7 +161,7 @@ class BayesianStudent(Student):
         rewards = self.expected_reward_pluriel_bayesian(
             self.corpus.list_items(list(range(self.corpus.nb_items)))
         )
-        return max(rewards)
+        return max(rewards, key=rewards.get)
 
     def get_best_reward(self):
         """returns the best expected reward to choose for the student with given theta
@@ -169,7 +173,7 @@ class BayesianStudent(Student):
         rewards = self.expected_reward_pluriel(
             self.corpus.list_items(list(range(self.corpus.nb_items)))
         )
-        return max(rewards)
+        return max(rewards.values())
 
     def simulate_bandit(self, item_id):
         """simulate the reward of the student to an item and add it to regret and reward list
@@ -181,14 +185,20 @@ class BayesianStudent(Student):
             float: reward of the student
         """
         item = self.corpus.get_item(item_id)
+        response = self.response(item)
+        reward = response * self.corpus.get_reward_item(item_id)
 
-        reward = self.response(item) * self.corpus.get_reward_item(item_id)
+        expected_reward = self.expected_response(item).copy()
+        best_action = self.get_best_reward().copy()
+        self.expected_reward_list.append(expected_reward)
+
         self.rewards_list.append(reward)
-        self.regrets_list.append(self.get_best_reward().copy() - reward)
+        self.regrets_list.append(best_action - expected_reward)
         return reward
 
     # optimize for new prior
     def optimize_prior(self):
+        """optimize the prior following the Lagrange Approximation"""
 
         def f(x):
             return -log_posterior_map(x, self.corpus, self.learning_trace, self.prior)
@@ -196,14 +206,25 @@ class BayesianStudent(Student):
         w0 = self.prior.rvs()
         res = scipy.optimize.minimize(f, w0, method="BFGS")
         self.res = res
+
         self.mu = res.x
         self.sigma = np.linalg.inv(res.hess_inv)
+        self.mu_history.append(self.mu.copy())
+        self.sigma_history.append(self.sigma.copy())
         # change prior
         self.prior = multivariate_normal(mean=self.mu, cov=self.sigma)
         self.theta_history.append(self.prior)
 
     # to estimate correctnes probability with the proxi ( should be better than with the sampled theta)
     def expected_proxi(self, item):
+        """estimate the correctness probability of an item with the approximation
+
+        Args:
+            item (object): item to product
+
+        Returns:
+            float: probability of correctness
+        """
         mu_a = self.mu @ item.kcs - item.difficulty
         sigma_a = item.kcs @ (self.sigma @ item.kcs)
         return sigmoid(mu_a / np.sqrt(1 + np.pi * sigma_a / 8))
@@ -221,8 +242,9 @@ class BayesianStudent(Student):
             float: expected reward with proxi
         """
         item = self.corpus.get_item(item_id)
-        reward = self.corpus.get_reward(item_id)
-        return reward * self.expected_proxi(item)
+        reward = self.corpus.get_reward_item(item_id)
+        expected_proxi_outcome = self.expected_proxi(item).copy()
+        return reward * expected_proxi_outcome
 
     def expected_reward_pluriel_proxi(self, items):
         """Returns expected reward with the proxi for a list of items
@@ -247,10 +269,18 @@ class BayesianStudent(Student):
         rewards = self.expected_reward_pluriel_proxi(
             self.corpus.list_items(list(range(self.corpus.nb_items)))
         )
-        return max(rewards)
+        return max(rewards,key=rewards.get)
 
     # calculate accuracy with the proxi
     def accuracy_with_proxi(self, items):
+        """Returns accuracy metrics using the approximation
+
+        Args:
+            items (list): list of items to predict for the student
+
+        Returns:
+            tuple: ROC_AUC, mean accuracy, mean squared error
+        """
 
         a = self.simulate_pluriel(items)
         b = np.array(self.expected_proxi_pluriel(items))
@@ -262,6 +292,14 @@ class BayesianStudent(Student):
 
     # calculate accuracy with the sampling method
     def accuracy_with_sampling(self, items):
+        """Returns accuracy metrics with the sampling method
+
+        Args:
+            items (list): list of items to predict for the student
+
+        Returns:
+            tuple: ROC_AUC, mean accuracy, mean squared error
+        """
         a = self.simulate_pluriel(items)
         d = np.array(self.expected_response_pluriel(items))
         b = []
@@ -285,6 +323,7 @@ class Classical_IRT(Student):
 
     # optimization with maximum likelihood
     def optimize_irt(self):
+        """optimize the IRT parameter follwing the maximum likelihood"""
 
         def f(x):
             return -log_posterior(x, self.corpus, self.learning_trace)
@@ -299,6 +338,14 @@ class Classical_IRT(Student):
 
     # to estimate the expected correctnes probability of the student to an item with estimated theta
     def expected_response_irt(self, item):
+        """returns correctness probability with the theta estimation
+
+        Args:
+            item (object): item to predict
+
+        Returns:
+            float: prediction
+        """
         return sigmoid(item.kcs @ self.estimated_theta - item.difficulty)
 
     def expected_response_pluriel_irt(self, items):
@@ -343,7 +390,7 @@ class Classical_IRT(Student):
         rewards = self.expected_reward_pluriel_irt(
             self.corpus.list_items(list(range(self.corpus.nb_items)))
         )
-        return max(rewards,key=rewards.get)
+        return max(rewards, key=rewards.get)
 
     # to improve the estimated theta with a learning rate ( ELO update)
 
@@ -358,7 +405,7 @@ class Classical_IRT(Student):
             self.corpus.list_items(list(range(self.corpus.nb_items)))
         )
         return max(rewards)
-    
+
     def expected_reward(self, item_id):
         """returns the expected reward of an item for the real theta of a student
 
@@ -373,7 +420,7 @@ class Classical_IRT(Student):
         a = reward * self.expected_response(item)
 
         return a
-    
+
     def expected_reward_pluriel(self, items):
         """returns the expected reward of a list of items for the real theta of a student
 
@@ -386,9 +433,15 @@ class Classical_IRT(Student):
         b = [self.expected_reward(items[j].id) for j in range(len(items))]
 
         return b
-    
 
     def estimated_irt_improve(self, item, response, lrn_rate):
+        """elo update of IRT estimation after a response to an item
+
+        Args:
+            item (object): item given
+            response (Boolean): has the student answered correctly or not
+            lrn_rate (float): learning rate in the update
+        """
 
         a = np.array(
             [
@@ -419,6 +472,14 @@ class Classical_IRT(Student):
 
     # to calculate accuracy with the estimated theta
     def accuracy_with_irt_estimate(self, items):
+        """Returns accuracy metrics with the IRT estimation
+
+        Args:
+            items (list): list of items to predict
+
+        Returns:
+            list: ROC_AUC, accuracy , MSE
+        """
 
         a = self.simulate_pluriel(items)
         b = np.array(self.expected_response_pluriel_irt(items))
@@ -427,3 +488,4 @@ class Classical_IRT(Student):
         mean_acc = accuracy_score(a, c)
         mse = np.mean((d - b) ** 2)
         return roc_auc_score(a, b), mean_acc, mse
+    
