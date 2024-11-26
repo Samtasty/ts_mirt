@@ -72,11 +72,6 @@ class Corpus(object):
         return self.dic_item[item_id]
 
     # get the reward for thompson sampling
-    # @property
-    # def dic_rewards(self):
-    #     a = {j: self.dic_item[j].difficulty for j in self.dic_item.keys()}
-    #     b = min(a.values())
-    #     return {j: self.dic_item[j].difficulty - b for j in self.dic_item.keys()}
 
     def get_rewards(self, list_index):
         return [self.dic_rewards[j] for j in list_index]

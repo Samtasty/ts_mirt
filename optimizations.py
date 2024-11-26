@@ -23,3 +23,15 @@ def laplace_approx(w, w_map, H):
     constant = np.sqrt(detH)/(2*np.pi)**(2.0/2.0)
     density = np.exp(-0.5 * (w-w_map).dot(H).dot(w-w_map))
     return constant * density
+
+def fisher_information(w,corpus,learning_trace):
+    items_id,outcomes=zip(*learning_trace)   
+    H = np.zeros((len(w)+1,len(w)+1))
+    for j in range(len(outcomes)):
+        item = corpus.get_item(items_id[j])
+        v=np.r_[item.kcs,-item.difficulty]
+        outer_product = np.outer(v,v)
+        p = item.expected_response(w)
+        q = 1 - p
+        H += p * q * outer_product
+    return H
