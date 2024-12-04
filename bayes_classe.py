@@ -3,10 +3,17 @@ from scipy.stats import multivariate_normal
 from scipy.special import expit as sigmoid
 from scipy.optimize import minimize
 from sklearn.metrics import roc_auc_score, accuracy_score
+
+import numpy as np
+
+
 import matplotlib.pyplot as plt
 from student import Student
 
+from dkt import *
+
 from optimizations import log_posterior_map, log_posterior
+
 
 class BayesianStudent(Student):
     def __init__(self, theta, mu, sigma, corpus):
@@ -48,7 +55,23 @@ class BayesianStudent(Student):
         self.sampled_theta_history.append(sampled_theta)
         return sampled_theta
 
+    def get_trained_model(self,trained_model,item_hidden_states, item_outcomes):
+        self.trained_model=trained_model
+        self.item_hidden_states=item_hidden_states
+        self.item_outcomes=item_outcomes
+
+
+    def get_fitted_models(self,classifier):
+        self.classifier=classifier
+        self.fitted_models=get_fitted_models(self.classifier,self.item_hidden_states, self.item_outcomes)
+
+
+    def get_last_hidden_state(self):
+        self.encoded_learning_trace,_ = preprocess_learning_trace(self.learning_trace, self.corpus.nb_items)
+        _,(a,_)=self.trained_model.rnn(self.encoded_learning_trace)
+        self.last_hidden_state=a.detach().numpy()
     ### Expected Responses ###
+
 
     def expected_response(self, item):
         """Expected correctness probability using real theta."""
@@ -70,6 +93,8 @@ class BayesianStudent(Student):
         mu_a = self.mu @ item_vector[:-1] - item_vector[-1]
         sigma_a = item_vector[:-1] @ (self.sigma @ item_vector[:-1])
         return sigmoid(mu_a / np.sqrt(1 + np.pi * sigma_a / 8))
+    
+    
 
     ### Exploration Matrix ###
     def exploration_matrix(self, lambda_):
@@ -162,6 +187,14 @@ class BayesianStudent(Student):
         reward = self._get_reward(item_id)
         response = self.expected_response_proxi(item)
         return reward * response
+    
+    def expected_reward_from_last_hidden_state(self, item_id, exploration_parameter):
+        """Expected reward with approximation exploration."""
+        
+        reward = self._get_reward(item_id)
+        last_hidden_state=self.last_hidden_state.copy()
+        response = self.fitted_models[item_id].predict_proba(last_hidden_state.reshape(1,-1))[0][1]
+        return reward * response
 
 
     ### Item Selection ###
@@ -182,6 +215,8 @@ class BayesianStudent(Student):
     def optimize_prior(self):
         """Optimize the prior using MAP."""
         def objective(x):
+            x = np.clip(x, -10, 10)
+
             return -log_posterior_map(x, self.corpus, self.learning_trace, self.prior)
         
         init_param=self.mu.copy()
@@ -200,6 +235,7 @@ class BayesianStudent(Student):
     def classical_optimization(self):
         """Optimize parameters using MLE."""
         def objective(x):
+            x = np.clip(x, -10, 10)
             return -log_posterior(x, self.corpus, self.learning_trace)
 
         res = minimize(objective, np.zeros_like(self.theta), method="BFGS")
@@ -220,8 +256,18 @@ class BayesianStudent(Student):
 
 
 
-    def bandit_simulation(self, n_rounds, exploration_parameter, reward_method, lambda_,epsilon,greedy):
+    def bandit_simulation(self, n_rounds, exploration_parameter, reward_method_name, lambda_,epsilon,greedy):
         """Simulate the bandit problem."""
+        reward_methods = {
+            'expected_reward': self.expected_reward,
+            'expected_reward_mle': self.expected_reward_mle,
+            'expected_reward_ucb': self.expected_reward_ucb,
+            'expected_reward_fisher': self.expected_reward_fisher,
+            'expected_reward_ts': self.expected_reward_ts,
+            'expected_reward_proxi': self.expected_reward_proxi,
+            'expected_reward_from_last_hidden_state': self.expected_reward_from_last_hidden_state
+        }
+        reward_method = reward_methods[reward_method_name]
         for _ in range(n_rounds):
 
             # do the optimization from the learning trace
@@ -231,9 +277,12 @@ class BayesianStudent(Student):
             # compute the fisher information matrix or the exploration matrix
             self.fisher_information_matrix()
             self.exploration_matrix(lambda_=lambda_)
-
+            
+            self.get_last_hidden_state()
+            
+            print([self.expected_reward_proxi(item_id=j,exploration_parameter=0.5) for j in range(100)])
             item_id = self.get_best_item(reward_method, exploration_parameter=exploration_parameter,epsilon=epsilon,greedy=greedy)
-
+            print(item_id)
             best_item_id= self.get_best_item(self.expected_reward, exploration_parameter=0,epsilon=0,greedy=True)
 
             response=self.response(self._get_item(item_id))

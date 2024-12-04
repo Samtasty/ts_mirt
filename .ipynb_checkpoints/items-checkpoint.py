@@ -9,10 +9,9 @@ import scipy.optimize
 from sklearn.metrics import roc_auc_score
 
 
-from scipy.special import expit
-
 def sigmoid(a):
-    return expit(a)
+    return 1 / (1 + np.exp(-a))
+
 
 ##class for an Item
 class Item(object):
