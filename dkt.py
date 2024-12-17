@@ -154,3 +154,22 @@ def get_fitted_models(classifier,item_hidden_states, item_outcomes):
         
         fitted_models[item_id] = classifier.fit(X, y)
     return fitted_models
+
+def exploration_from_hidden_state(list_of_hidden_state,lambda_):
+    """
+    Compute the exploration matrix from the hidden states.
+    
+    Args:
+        list_of_hidden_state (list of np.array): List of hidden states.
+    
+    Returns:
+        matrix: matrix.
+    """
+    hidden_state_dim=len(list_of_hidden_state[0])
+    matrix=lambda_*np.identity(hidden_state_dim)
+
+    for i in range(len(list_of_hidden_state)):
+        matrix= matrix+np.outer(list_of_hidden_state[i],list_of_hidden_state[i])
+    return matrix    
+
+        

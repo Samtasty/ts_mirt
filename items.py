@@ -27,6 +27,9 @@ class Item(object):
 
     def response(self, student):
         return bernoulli.rvs(self.expected_response(student))
+    
+    def get_vector(self):
+        return np.r_[self.kcs, -self.difficulty]
 
 
 # generate a random item and make sure that the kcs are a probability distribution
@@ -79,5 +82,7 @@ class Corpus(object):
 
     def get_reward_item(self, item_id):
         return self.dic_rewards[item_id]
+    
+
 
 

@@ -35,3 +35,32 @@ def fisher_information(w,corpus,learning_trace):
         q = 1 - p
         H += p * q * outer_product
     return H
+
+def reg_log_likelihood(w,corpus,learning_trace):
+    items_id,outcomes=zip(*learning_trace)      
+    corrects=[corpus.dic_rewards[j]*np.log(corpus.get_item(j).expected_response(w)+1e-10) for j in items_id]
+    errors=[corpus.dic_rewards[j]*np.log(1-corpus.get_item(j).expected_response(w)+1e-10) for j in items_id]
+    L=np.sum([outcomes[j]*corrects[j]+(1-outcomes[j])*errors[j] for j in range(len(outcomes))])
+    return L
+
+
+def ellipsoid_over_items(a,b,inv_H,corpus,list_of_index_items): 
+    """
+    Compute the ellipsoid over the items.
+    
+    Args:
+        a (np.array): Center of the ellipsoid.
+        b (float): Radius of the ellipsoid.
+        inv_H (np.array): Inverse of the Hessian matrix.
+        list_of_items (list of np.array): List of items.
+    
+    Returns:
+        list of np.array: List of items in the ellipsoid.
+    """
+
+    
+    g_a=np.sum([corpus.dic_rewards[i]*corpus.dic_item[i].expected_response(a)*corpus.dic_item[i].kcs for i in list_of_index_items],axis=0)
+
+    g_b=np.sum([corpus.dic_rewards[i]*corpus.dic_item[i].expected_response(b)*corpus.dic_item[i].kcs for i in list_of_index_items],axis=0)
+
+    return (g_a-g_b)@inv_H@(g_a-g_b)
