@@ -383,6 +383,7 @@ class BayesianStudent(Student):
             "expected_reward_proxi": self.expected_reward_proxi,
             "expected_reward_from_last_hidden_state": self.expected_reward_from_last_hidden_state,
             "expected_reward_ellipsoid": self.expected_reward_ellipsoid,
+            
         }
         reward_method = reward_methods[reward_method_name]
 
@@ -401,7 +402,7 @@ class BayesianStudent(Student):
                 reward_method,
                 exploration_parameter=exploration_parameter,
                 epsilon=epsilon,
-                greedy=greedy,)
+                greedy=1,)
                 response = self.response(self._get_item(item_id))
                 self.optimize_prior()
 
@@ -413,7 +414,7 @@ class BayesianStudent(Student):
                 reward_method,
                 exploration_parameter=exploration_parameter,
                 epsilon=epsilon,
-                greedy=greedy,)
+                greedy=1,)
                 response = self.response(self._get_item(item_id))
                 
 
@@ -424,7 +425,7 @@ class BayesianStudent(Student):
                 reward_method,
                 exploration_parameter=exploration_parameter,
                 epsilon=epsilon,
-                greedy=greedy,)
+                greedy=1,)
                 response = self.response(self._get_item(item_id))
                 self.update_exploration_matrix(item_id)
             if reward_method_name == "expected_reward_mle" or reward_method_name == "expected_reward_ucb":
@@ -435,7 +436,7 @@ class BayesianStudent(Student):
                     reward_method,
                     exploration_parameter=exploration_parameter,
                     epsilon=epsilon,
-                    greedy=greedy,
+                    greedy=1,
                 )
                 response = self.response(self._get_item(item_id))
                 self.update_exploration_matrix(item_id)
@@ -447,12 +448,19 @@ class BayesianStudent(Student):
                     reward_method,
                     exploration_parameter=exploration_parameter,
                     epsilon=epsilon,
-                    greedy=greedy,
+                    greedy=1,
                 )
                 response = self.response(self._get_item(item_id))
                 self.update_hidden_state_exploration_matrix(item_id)   
 
-            
+            if reward_method_name == "epsilon_greedy":
+                item_id = self.get_best_item(
+                    self.expected_reward_mle,
+                    exploration_parameter=0,
+                    epsilon=epsilon,
+                    greedy=0,
+                )
+                response = self.response(self._get_item(item_id))
 
 
             best_item_id = self.get_best_item(
