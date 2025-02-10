@@ -51,6 +51,7 @@ class Corpus(object):
         a = {j: self.dic_item[j].difficulty for j in self.dic_item.keys()}
         b = min(a.values())
         self.dic_rewards= {j: self.dic_item[j].difficulty - b for j in self.dic_item.keys()}
+        self.usable_item_index= list(range(nb_items))
 
     # add a random item to the corpus
     def add_random_item(self):
@@ -66,6 +67,9 @@ class Corpus(object):
     def delete_item(self, item_id):
         del self.dic_item[item_id]
         self.nb_items -= 1
+
+    def make_item_unsable(self, item_id):
+        self.usable_item_index.remove(item_id)
 
     # choose a list of items from the corpus
     def list_items(self, list_index):

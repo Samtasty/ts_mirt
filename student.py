@@ -9,6 +9,9 @@ from items import *
 def sigmoid(a):
     return 1 / (1 + np.exp(-a))
 
+def generate_learning_gains(theta_dim):
+    lambda_ = 1.0  # Rate parameter
+    return np.random.exponential(scale=1/lambda_, size=theta_dim)
 
 ## Parent class for Student
 class Student(object):

@@ -16,7 +16,7 @@ from items import *
 from student import *
 
 
-## Child class for Beyasian Student
+## Child class for Bayesian Student
 class BayesianStudent(Student):
     def __init__(self, theta, mu, sigma, Corpus):
         super().__init__(theta)

@@ -2,6 +2,7 @@ import numpy as np
 from scipy.stats import multivariate_normal
 from scipy.special import expit as sigmoid
 from scipy.optimize import minimize
+from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import roc_auc_score, accuracy_score
 
 import numpy as np
@@ -29,6 +30,7 @@ class BayesianStudent(Student):
         self.prior = multivariate_normal(mean=mu, cov=sigma)
         self.corpus = corpus
         self.lambda_ = lambda_
+        self.usable_items_index = list(range(corpus.nb_items))
 
         # Histories
         self.mu_history = [mu]
@@ -281,10 +283,10 @@ class BayesianStudent(Student):
     ### Item Selection ###
     def get_best_item(self, reward_method, exploration_parameter, epsilon, greedy):
         """Select the best item based on a reward method."""
-        items = self.corpus.list_items(range(self.corpus.nb_items))
+        
         rewards = {
-            item.id: reward_method(item.id, exploration_parameter=exploration_parameter)
-            for item in items
+            a: reward_method(a, exploration_parameter=exploration_parameter)
+            for a in self.usable_items_index
         }
         if greedy:
             return max(rewards, key=rewards.get)
@@ -371,7 +373,7 @@ class BayesianStudent(Student):
         return roc_auc, mean_acc, mse
 
     def bandit_simulation(
-        self, n_rounds, exploration_parameter, reward_method_name, epsilon, greedy
+        self, n_rounds, exploration_parameter, reward_method_name, epsilon,item_removal
     ):
         """Simulate the bandit problem."""
         reward_methods = {
@@ -383,6 +385,8 @@ class BayesianStudent(Student):
             "expected_reward_proxi": self.expected_reward_proxi,
             "expected_reward_from_last_hidden_state": self.expected_reward_from_last_hidden_state,
             "expected_reward_ellipsoid": self.expected_reward_ellipsoid,
+            "epsilon_greedy": self.expected_reward_mle
+
             
         }
         reward_method = reward_methods[reward_method_name]
@@ -428,22 +432,32 @@ class BayesianStudent(Student):
                 greedy=1,)
                 response = self.response(self._get_item(item_id))
                 self.update_exploration_matrix(item_id)
-            if reward_method_name == "expected_reward_mle" or reward_method_name == "expected_reward_ucb":
+            if reward_method_name == "expected_reward_mle" or reward_method_name == "expected_reward_ucb" or reward_method_name=='epsilon_greedy':
 
+                
 
                 self.classical_optimization()
-                item_id = self.get_best_item(
+                if reward_method_name == "epsilon_greedy":
+
+                    item_id = self.get_best_item(
                     reward_method,
                     exploration_parameter=exploration_parameter,
                     epsilon=epsilon,
-                    greedy=1,
+                    greedy=0,
                 )
+                else:
+
+                    item_id = self.get_best_item(
+                        reward_method,
+                        exploration_parameter=exploration_parameter,
+                        epsilon=epsilon,
+                        greedy=1,
+                    )
                 response = self.response(self._get_item(item_id))
                 self.update_exploration_matrix(item_id)
                 
                 
             if reward_method_name == "expected_reward_from_last_hidden_state": 
-                self.get_last_hidden_state()
                 item_id = self.get_best_item(
                     reward_method,
                     exploration_parameter=exploration_parameter,
@@ -451,14 +465,18 @@ class BayesianStudent(Student):
                     greedy=1,
                 )
                 response = self.response(self._get_item(item_id))
-                self.update_hidden_state_exploration_matrix(item_id)   
+                self.update_hidden_state_exploration_matrix(item_id)
+                self.get_last_hidden_state()
+                
 
-            if reward_method_name == "epsilon_greedy":
+
+
+            elif reward_method_name == "expected_reward":
                 item_id = self.get_best_item(
-                    self.expected_reward_mle,
-                    exploration_parameter=0,
+                    reward_method,
+                    exploration_parameter=exploration_parameter,
                     epsilon=epsilon,
-                    greedy=0,
+                    greedy=1,
                 )
                 response = self.response(self._get_item(item_id))
 
@@ -475,6 +493,9 @@ class BayesianStudent(Student):
             b = self.expected_reward(best_item_id, exploration_parameter).copy()
             self.expected_reward_list.append(a)
             self.regrets_list.append(b - a)
+            if item_removal:
+
+                self.usable_items_index.remove(item_id)
 
 
     def plot_metrics(self):
@@ -505,79 +526,8 @@ class BayesianStudent(Student):
         plt.show()
 
 
-def plot_average_metrics(students, n_rounds):
-    """Plot the average metrics of n students over n_rounds for different reward methods."""
-    reward_methods = {
-        "Expected Reward": "expected_reward",
-        "Expected Reward MLE": "expected_reward_mle",
-        "Expected Reward UCB": "expected_reward_ucb",
-        "Expected Reward Fisher": "expected_reward_fisher",
-        "Expected Reward TS": "expected_reward_ts",
-        "Expected Reward Proxi": "expected_reward_proxi",   
-        "Expected Reward From Last Hidden State": "expected_reward_from_last_hidden_state",
-        "Expected Reward Ellipsoid": "expected_reward_ellipsoid"
-    }
 
-    for method_name, method in reward_methods.items():
-        avg_expected_rewards = np.zeros(n_rounds)
-        avg_regrets = np.zeros(n_rounds)
-        avg_real_rewards = np.zeros(n_rounds)
-
-        for student in students:
-            student.bandit_simulation(
-                n_rounds,
-                exploration_parameter=1,
-                reward_method=getattr(student, method),
-                epsilon=0.1,
-                greedy=False,
-            )
-            avg_expected_rewards += np.array(student.expected_reward_list)
-            avg_regrets += np.array(student.regrets_list)
-            avg_real_rewards += np.array(student.rewards_list)
-
-        avg_expected_rewards /= len(students)
-        avg_regrets /= len(students)
-        avg_real_rewards /= len(students)
-
-        rounds = range(n_rounds)
-
-        plt.figure(figsize=(12, 8))
-
-        plt.subplot(3, 1, 1)
-        plt.plot(
-            rounds,
-            avg_expected_rewards,
-            label=f"Average Expected Reward ({method_name})",
-        )
-        plt.xlabel("Rounds")
-        plt.ylabel("Average Expected Reward")
-        plt.legend()
-
-        plt.subplot(3, 1, 2)
-        plt.plot(
-            rounds, avg_regrets, label=f"Average Regret ({method_name})", color="orange"
-        )
-        plt.xlabel("Rounds")
-        plt.ylabel("Average Regret")
-        plt.legend()
-
-        plt.subplot(3, 1, 3)
-        plt.plot(
-            rounds,
-            avg_real_rewards,
-            label=f"Average Real Reward ({method_name})",
-            color="green",
-        )
-        plt.xlabel("Rounds")
-        plt.ylabel("Average Real Reward")
-        plt.legend()
-
-        plt.tight_layout()
-        plt.show()
-
-
-
-def plot_average_metrics(n_students, n_rounds,exploration_parameter,lambda_):
+def plot_average_metrics(dim_theta,n_students, n_rounds,exploration_parameter,lambda_,corpus,cold_start_len,item_removal,knowledge_evolving_time_step):
     """Plot the average metrics of n students over n_rounds for different reward methods."""
     reward_methods = {
         'Expected Reward': 'expected_reward',
@@ -594,10 +544,10 @@ def plot_average_metrics(n_students, n_rounds,exploration_parameter,lambda_):
                                  'real_rewards': np.zeros(n_rounds)}
                    for method_name in reward_methods.keys()}
     
-    dic_students={i:generate_student(10) for i in range(200)}
+    dic_students={i:generate_student(dim_theta) for i in range(200)}
 
     for i in range(200):
-        dic_students[i].simulate_pluriel(items=corpus.list_items(np.random.randint(0,100,size=23)))
+        dic_students[i].simulate_pluriel(items=corpus.list_items(np.random.randint(0,corpus.nb_items,size=cold_start_len)))
 
     model=DKT(input_dim=200,hidden_dim=5,output_dim=100)
     new_trained_model,item_hidden_states, item_outcomes= training_model(model,dic_students,corpus=corpus,epochs=20,batch_size=16,learning_rate=0.01)
@@ -605,15 +555,23 @@ def plot_average_metrics(n_students, n_rounds,exploration_parameter,lambda_):
 
     for method_name, method in reward_methods.items():
         for _ in range(n_students):
-            gen_student=generate_student(10)
+            gen_student=generate_student(dim_theta)
             theta = gen_student.theta
             student = BayesianStudent(theta, corpus=corpus, mu=np.zeros(gen_student.theta_dim), sigma=np.eye(gen_student.theta_dim))
-            student.simulate_pluriel(corpus.list_items(np.random.randint(0, 100, size=15)))
+            student.simulate_pluriel(corpus.list_items(0,corpus.nb_items,size=cold_start_len))
             student.get_trained_model(new_trained_model,item_hidden_states, item_outcomes)
             student.get_fitted_models(LogisticRegression())
+            if knowledge_evolving_time_step>0:
 
-            student.bandit_simulation(n_rounds, exploration_parameter=exploration_parameter, reward_method=getattr(student, method), lambda_=lambda_, epsilon=None, greedy=True)
-            print(np.max(student.sampled_theta_history,axis=0))
+                for _ in range(n_rounds//knowledge_evolving_time_step):
+
+                    student.bandit_simulation(knowledge_evolving_time_step, exploration_parameter=exploration_parameter, reward_method=getattr(student, method), lambda_=lambda_, epsilon=None, greedy=True,item_removal=item_removal)
+                    student.improvement(generate_learning_gains(gen_student.theta_dim))
+                
+            else:
+            
+                student.bandit_simulation(n_rounds, exploration_parameter=exploration_parameter, reward_method=getattr(student, method), lambda_=lambda_, epsilon=None, greedy=True,item_removal=item_removal)
+            
             avg_metrics[method_name]['expected_rewards'] += np.array(student.expected_reward_list)
             avg_metrics[method_name]['regrets'] += np.array(student.regrets_list)
             avg_metrics[method_name]['real_rewards'] += np.array(student.rewards_list)
