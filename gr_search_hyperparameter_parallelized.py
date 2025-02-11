@@ -92,7 +92,10 @@ def run_one_student(
     return (
         np.array(student.expected_reward_list),
         np.array(student.regrets_list),
-        np.array(student.rewards_list)
+        np.array(student.rewards_list),
+        np.cumsum(student.expected_reward_list),
+        np.cumsum(student.regrets_list),
+        np.cumsum(student.rewards_list)
     )
 
 def run_experiment_parallel(
@@ -127,23 +130,36 @@ def run_experiment_parallel(
     sum_expected = np.zeros(n_rounds)
     sum_regrets = np.zeros(n_rounds)
     sum_real_rewards = np.zeros(n_rounds)
+    cum_sum_expected = np.zeros(n_rounds)
+    cum_sum_regrets = np.zeros(n_rounds)
+    cum_sum_real_rewards = np.zeros(n_rounds)
 
-    for (exp_r, rg, real_r) in results:
+    for (exp_r, rg, real_r,cum_exp_r,cum_rg,cum_real_r) in results:
         sum_expected += exp_r
         sum_regrets += rg
         sum_real_rewards += real_r
+        cum_sum_expected += cum_exp_r
+        cum_sum_regrets += cum_rg
+        cum_sum_real_rewards += cum_real_r
 
     # 3) Average over students
     avg_expected_rewards = sum_expected / n_students
     avg_regrets = sum_regrets / n_students
     avg_real_rewards = sum_real_rewards / n_students
 
+    avg_cum_expected_rewards = cum_sum_expected / n_students
+    avg_cum_regrets = cum_sum_regrets / n_students
+    avg_cum_real_rewards = cum_sum_real_rewards / n_students
+
     # 4) Build and return a DataFrame
     df_results = pd.DataFrame({
         "Round": np.arange(n_rounds),
         "Expected Reward": avg_expected_rewards,
         "Regret": avg_regrets,
-        "Real Reward": avg_real_rewards
+        "Real Reward": avg_real_rewards,
+        "Cumulative Expected Reward": avg_cum_expected_rewards,
+        "Cumulative Regret": avg_cum_regrets,
+        "Cumulative Real Reward": avg_cum_real_rewards
     })
     return df_results
 

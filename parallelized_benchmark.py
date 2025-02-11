@@ -116,6 +116,7 @@ def plot_average_metrics(dim_theta, n_students, n_rounds, exploration_parameter,
         'Expected Reward Thompson': 'expected_reward_ts',
         'expected Reward Proxi': 'expected_reward_proxi',
         "expected Reward Ellipsoid": 'expected_reward_ellipsoid',
+        
     }
 
     avg_metrics = {

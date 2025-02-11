@@ -385,7 +385,8 @@ class BayesianStudent(Student):
             "expected_reward_proxi": self.expected_reward_proxi,
             "expected_reward_from_last_hidden_state": self.expected_reward_from_last_hidden_state,
             "expected_reward_ellipsoid": self.expected_reward_ellipsoid,
-            "epsilon_greedy": self.expected_reward_mle
+            "epsilon_greedy": self.expected_reward_mle,
+            "random_baseline":  None
 
             
         }
@@ -398,6 +399,10 @@ class BayesianStudent(Student):
 
 
         for _ in range(n_rounds):
+
+            if reward_method_name == "random_baseline":
+                item_id = np.random.choice(self.usable_items_index)
+                response = self.response(self._get_item(item_id))
 
             # do the optimization from the learning trace
             if reward_method_name == "expected_reward_ts" or reward_method_name=='expected_reward_proxi':
@@ -536,7 +541,8 @@ def plot_average_metrics(dim_theta,n_students, n_rounds,exploration_parameter,la
         'Expected Reward Fisher': 'expected_reward_fisher',
         'Expected Reward Thompson': 'expected_reward_ts',
         'expected Reward Proxi':  'expected_reward_proxi',
-        'expected Reward DKT':  'expected_reward_from_last_hidden_state'
+        'expected Reward DKT':  'expected_reward_from_last_hidden_state',
+        "Random Baseline": "random_baseline"
     }
 
     avg_metrics = {method_name: {'expected_rewards': np.zeros(n_rounds),

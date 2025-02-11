@@ -20,6 +20,8 @@ from optimizations import (
 base_dir = os.path.join(os.getcwd(), "../..")
 sys.path.append(base_dir)
 
+
+
 def run_experiment(method_name, dim_theta, n_students, n_rounds, exploration_parameter,
                    lambda_, corpus, cold_start_len, item_removal,
                    knowledge_evolving_time_step, epsilon):
@@ -162,7 +164,7 @@ if __name__ == "__main__":
     # Concatenate all results
     df_all = pd.concat(all_results, ignore_index=True)
     # Save for future reference
-    df_all.to_csv("grid_search_results.csv", index=False)
+    df_all.to_csv("grid_search"+str(arg.method)+"_results.csv", index=False)
 
     # Now let's do the plotting:
     # We'll group by exploration_parameter and plot the average curves of:
@@ -183,7 +185,7 @@ if __name__ == "__main__":
 
     plt.suptitle(f"Method: {args.method} | Grid Search over exploration_parameter")
     plt.tight_layout()
-    plt.savefig("grid_search_plot.pdf")
+    plt.savefig("grid_search"+str(arg.method)+"_plot.pdf")
     
 
     print("\nDone! The results are in 'grid_search_results.csv' and the plot is 'grid_search_plot.pdf'.")
