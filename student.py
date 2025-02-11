@@ -10,9 +10,9 @@ def sigmoid(a):
     return 1 / (1 + np.exp(-a))
 
 def generate_learning_gains(theta_dim):
-    lambda_ = 1.0  # Rate parameter
+    lambda_ = 10.0  # Rate parameter
     return np.random.exponential(scale=1/lambda_, size=theta_dim)
-
+#%%
 ## Parent class for Student
 class Student(object):
     def __init__(self, theta):
@@ -23,6 +23,7 @@ class Student(object):
         self.rewards_list = []  # list of rewards
         self.regrets_list = []  # list of regrets
         self.expected_reward_list = []
+  
 
     # to estimate the expected correctnes probability of the student to an item
     def expected_response(self, item):
@@ -52,12 +53,17 @@ class Student(object):
         self.theta += lrn_gains
 
     # to erase the last nb_events from the learning trace
-    def erase_learning_trace(self, nb_events):
-        self.learning_trace = self.learning_trace[:-nb_events]
+    def erase_learning_trace(self, cut_off):
+        a=self.learning_trace.copy()
 
+        self.learning_trace = a[cut_off:]
+
+#%%    
 
 # to generate a random student
 def generate_student(theta_dim):
     return Student(np.random.randn(theta_dim))
+
+
 
 
