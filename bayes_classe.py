@@ -120,8 +120,10 @@ class BayesianStudent(Student):
     def expected_response_proxi(self, item):
         """Expected correctness probability using approximation."""
         item_vector = item.get_vector()
-        mu_a = self.mu @ item_vector[:-1] - item_vector[-1]
-        sigma_a = item_vector[:-1] @ (self.sigma @ item_vector[:-1])
+        mu= self.mu.copy()
+        sigma=self.sigma.copy()
+        mu_a = mu @ item_vector[:-1] - item_vector[-1]
+        sigma_a = item_vector[:-1] @ (sigma @ item_vector[:-1])
         return sigmoid(mu_a / np.sqrt(1 + np.pi * sigma_a / 8))
 
     def expected_response_ellipsoid(self, item):
@@ -406,6 +408,7 @@ class BayesianStudent(Student):
 
             # do the optimization from the learning trace
             if reward_method_name == "expected_reward_ts" or reward_method_name=='expected_reward_proxi':
+                self.optimize_prior()
                 self.sample_distribution()
                 item_id = self.get_best_item(
                 reward_method,
@@ -413,7 +416,7 @@ class BayesianStudent(Student):
                 epsilon=epsilon,
                 greedy=1,)
                 response = self.response(self._get_item(item_id))
-                self.optimize_prior()
+                
 
             if reward_method_name == "expected_reward_fisher":
 
