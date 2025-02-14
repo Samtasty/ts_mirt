@@ -45,7 +45,8 @@ def simulate_one_student(l, dim_theta, n_rounds, exploration_parameter, lambda_,
     for method_name, method in reward_methods.items():
         student = BayesianStudent(theta, corpus=corpus, mu=np.zeros(gen_student.theta_dim), sigma=np.eye(gen_student.theta_dim), lambda_=lambda_)
         student.learning_trace = starting_learning_trace.copy()
-
+        print('method',method)
+        print('initial_theta',student.theta)
         if knowledge_evolving_time_step > 0:
             for _ in range(n_rounds // knowledge_evolving_time_step):
                 student.bandit_simulation(knowledge_evolving_time_step, exploration_parameter=exploration_parameter, reward_method_name=method, epsilon=epsilon, item_removal=item_removal)
@@ -54,7 +55,9 @@ def simulate_one_student(l, dim_theta, n_rounds, exploration_parameter, lambda_,
             student.bandit_simulation(n_rounds, exploration_parameter=exploration_parameter, reward_method_name=method, epsilon=epsilon, item_removal=item_removal)
         
         student_results[method_name]['expected_rewards'] = np.array(student.expected_reward_list)
+        print('expected_reward_list',student_results[method_name]['expected_rewards'])
         student_results[method_name]['regrets'] = np.array(student.regrets_list)
+        print('regrets_list',student_results[method_name]['regrets'])
         student_results[method_name]['real_rewards'] = np.array(student.rewards_list)
         student_results[method_name]['cumulated_expected_rewards'] = np.cumsum(student.expected_reward_list)
         student_results[method_name]['cumulated_regrets'] = np.cumsum(student.regrets_list)
@@ -117,53 +120,59 @@ def plot_average_metrics(dim_theta, n_students, n_rounds, exploration_parameter,
 
     # Plot results
     rounds = range(n_rounds)
-    plt.figure(figsize=(12, 8))
+    plt.figure(figsize=(16, 12))
 
     for method_name in reward_methods.keys():
         plt.subplot(3, 1, 1)
-        plt.plot(rounds, avg_metrics[method_name]['expected_rewards'], label=f'Average Expected Reward ({method_name})')
+        plt.plot(rounds, avg_metrics[method_name]['expected_rewards'], label=f'({method_name})')
         plt.xlabel('Rounds')
         plt.ylabel('Average Expected Reward')
-        plt.legend()
+        plt.legend(loc='upper left', bbox_to_anchor=(1, 1))
 
         plt.subplot(3, 1, 2)
-        plt.plot(rounds, avg_metrics[method_name]['regrets'], label=f'Average Regret ({method_name})')
+        plt.plot(rounds, avg_metrics[method_name]['regrets'], label=f'({method_name})')
         plt.xlabel('Rounds')
         plt.ylabel('Average Regret')
-        plt.legend()
+        plt.legend(loc='upper left', bbox_to_anchor=(1, 1))
 
         plt.subplot(3, 1, 3)
-        plt.plot(rounds, avg_metrics[method_name]['real_rewards'], label=f'Average Real Reward ({method_name})')
+        plt.plot(rounds, avg_metrics[method_name]['real_rewards'], label=f'({method_name})')
         plt.xlabel('Rounds')
         plt.ylabel('Average Real Reward')
-        plt.legend()
+        plt.legend(loc='upper left', bbox_to_anchor=(1, 1))
 
 
     plt.tight_layout()
-    plt.savefig('method_comparaison_not_cumulated.pdf')
+    figures_dir = "figures"
+    os.makedirs(figures_dir, exist_ok=True)
 
-    plt.figure(figsize=(12, 8))
+    plot_filename_not_cumulated = f"method_comparaison_not_cumulated_dim_{dim_theta}_items_{corpus.nb_items}_rounds_{n_rounds}_expl_{exploration_parameter}_removal_{item_removal}_ke_step_{knowledge_evolving_time_step}_eps_{epsilon}.pdf"
+    plt.tight_layout()
+    plt.savefig(os.path.join(figures_dir, plot_filename_not_cumulated))
+
+    plt.figure(figsize=(16, 8))
 
     for method_name in reward_methods.keys():
         plt.subplot(3, 1, 1)
-        plt.plot(rounds, avg_metrics[method_name]['cumulated_expected_rewards'], label=f'Average Cumulated Expected Reward ({method_name})')
+        plt.plot(rounds, avg_metrics[method_name]['cumulated_expected_rewards'], label=f'({method_name})')
         plt.xlabel('Rounds')
         plt.ylabel('Average Cumulated Expected Reward')
         plt.legend()
 
         plt.subplot(3, 1, 2)
-        plt.plot(rounds, avg_metrics[method_name]['cumulated_regrets'], label=f'Average Cumulated Regret ({method_name})')
+        plt.plot(rounds, avg_metrics[method_name]['cumulated_regrets'], label=f'({method_name})')
         plt.xlabel('Rounds')
         plt.ylabel('Average Cumulated Regret')
         plt.legend()
 
         plt.subplot(3, 1, 3)
-        plt.plot(rounds, avg_metrics[method_name]['cumulated_real_rewards'], label=f'Average Cumulated Real Reward ({method_name})')
+        plt.plot(rounds, avg_metrics[method_name]['cumulated_real_rewards'], label=f'({method_name})')
         plt.xlabel('Rounds')
         plt.ylabel('Average Cumulated Real Reward')
 
+    plot_filename_cumulated = f"method_comparaison_cumulated_dim_{dim_theta}_items_{corpus.nb_items}_rounds_{n_rounds}_expl_{exploration_parameter}_removal_{item_removal}_ke_step_{knowledge_evolving_time_step}_eps_{epsilon}.pdf"
     plt.tight_layout()
-    plt.savefig('method_comparaison_cumulated.pdf')
+    plt.savefig(os.path.join(figures_dir, plot_filename_cumulated))
     # Convert avg_metrics to DataFrame
     rows = []
     for method_name in reward_methods.keys():
@@ -180,7 +189,10 @@ def plot_average_metrics(dim_theta, n_students, n_rounds, exploration_parameter,
             })
 
     df_metrics = pd.DataFrame(rows)
-    df_metrics.to_csv('avg_metrics_same_students.csv', index=False)
+    csv_dir = "csv_files"
+    os.makedirs(csv_dir, exist_ok=True)
+    csv_filename = f"avg_metrics_same_students_dim_{dim_theta}_items_{corpus.nb_items}_rounds_{n_rounds}_expl_{exploration_parameter}_removal_{item_removal}_ke_step_{knowledge_evolving_time_step}_eps_{epsilon}.csv"
+    df_metrics.to_csv(os.path.join(csv_dir, csv_filename), index=False)
 
     return df_metrics
 

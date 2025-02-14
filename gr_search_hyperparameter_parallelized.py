@@ -22,6 +22,7 @@ from optimizations import (
 base_dir = os.path.join(os.getcwd(), "../..")
 sys.path.append(base_dir)
 
+
 def run_one_student(
     dim_theta,
     method_name,
@@ -32,7 +33,7 @@ def run_one_student(
     cold_start_len,
     item_removal,
     knowledge_evolving_time_step,
-    epsilon
+    epsilon,
 ):
     """
     Simulate one student using the specified bandit method and hyperparams.
@@ -48,7 +49,7 @@ def run_one_student(
         corpus=corpus,
         mu=np.zeros(gen_student.theta_dim),
         sigma=np.eye(gen_student.theta_dim),
-        lambda_=lambda_
+        lambda_=lambda_,
     )
 
     # Cold start
@@ -64,7 +65,7 @@ def run_one_student(
                 exploration_parameter=exploration_parameter,
                 reward_method_name=method_name,
                 epsilon=epsilon,
-                item_removal=item_removal
+                item_removal=item_removal,
             )
             # then artificially "improve" knowledge
             student.improvement(generate_learning_gains(gen_student.theta_dim))
@@ -76,7 +77,7 @@ def run_one_student(
                 exploration_parameter=exploration_parameter,
                 reward_method_name=method_name,
                 epsilon=epsilon,
-                item_removal=item_removal
+                item_removal=item_removal,
             )
     else:
         # Single chunk
@@ -85,7 +86,7 @@ def run_one_student(
             exploration_parameter=exploration_parameter,
             reward_method_name=method_name,
             epsilon=epsilon,
-            item_removal=item_removal
+            item_removal=item_removal,
         )
 
     # Return the arrays of interest
@@ -95,13 +96,22 @@ def run_one_student(
         np.array(student.rewards_list),
         np.cumsum(student.expected_reward_list),
         np.cumsum(student.regrets_list),
-        np.cumsum(student.rewards_list)
+        np.cumsum(student.rewards_list),
     )
 
+
 def run_experiment_parallel(
-    method_name, dim_theta, n_students, n_rounds, exploration_parameter,
-    lambda_, corpus, cold_start_len, item_removal,
-    knowledge_evolving_time_step, epsilon
+    method_name,
+    dim_theta,
+    n_students,
+    n_rounds,
+    exploration_parameter,
+    lambda_,
+    corpus,
+    cold_start_len,
+    item_removal,
+    knowledge_evolving_time_step,
+    epsilon,
 ):
     """
     Parallel version of run_experiment:
@@ -121,7 +131,7 @@ def run_experiment_parallel(
             cold_start_len=cold_start_len,
             item_removal=item_removal,
             knowledge_evolving_time_step=knowledge_evolving_time_step,
-            epsilon=epsilon
+            epsilon=epsilon,
         )
         for _ in range(n_students)
     )
@@ -134,7 +144,7 @@ def run_experiment_parallel(
     cum_sum_regrets = np.zeros(n_rounds)
     cum_sum_real_rewards = np.zeros(n_rounds)
 
-    for (exp_r, rg, real_r,cum_exp_r,cum_rg,cum_real_r) in results:
+    for exp_r, rg, real_r, cum_exp_r, cum_rg, cum_real_r in results:
         sum_expected += exp_r
         sum_regrets += rg
         sum_real_rewards += real_r
@@ -152,37 +162,58 @@ def run_experiment_parallel(
     avg_cum_real_rewards = cum_sum_real_rewards / n_students
 
     # 4) Build and return a DataFrame
-    df_results = pd.DataFrame({
-        "Round": np.arange(n_rounds),
-        "Expected Reward": avg_expected_rewards,
-        "Regret": avg_regrets,
-        "Real Reward": avg_real_rewards,
-        "Cumulative Expected Reward": avg_cum_expected_rewards,
-        "Cumulative Regret": avg_cum_regrets,
-        "Cumulative Real Reward": avg_cum_real_rewards
-    })
+    df_results = pd.DataFrame(
+        {
+            "Round": np.arange(n_rounds),
+            "Expected Reward": avg_expected_rewards,
+            "Regret": avg_regrets,
+            "Real Reward": avg_real_rewards,
+            "Cumulative Expected Reward": avg_cum_expected_rewards,
+            "Cumulative Regret": avg_cum_regrets,
+            "Cumulative Real Reward": avg_cum_real_rewards,
+        }
+    )
     return df_results
+
 
 if __name__ == "__main__":
 
     parser = argparse.ArgumentParser(
-        description='Plot the average metrics for a single reward method over n_rounds, \
-                     across multiple exploration_parameter values (grid search).'
+        description="Plot the average metrics for a single reward method over n_rounds, \
+                     across multiple exploration_parameter values (grid search)."
     )
-    parser.add_argument('--dim_theta', type=int, default=10, help='Dimension of theta')
-    parser.add_argument('--n_students', type=int, default=100, help='Number of students')
-    parser.add_argument('--n_rounds', type=int, default=50, help='Number of rounds')
-    parser.add_argument('--exploration_parameter', type=float, default=0.1,
-                        help='(Deprecated) Single exploration parameter - not used directly, we do grid search now.')
-    parser.add_argument('--epsilon', type=float, default=0.1, help='Epsilon parameter')
-    parser.add_argument('--lambda_', type=float, default=0.01, help='Lambda parameter')
-    parser.add_argument('--corpus_nb_items', type=int, default=50, help='Corpus object')
-    parser.add_argument('--cold_start_len', type=int, default=5, help='Cold start length')
-    parser.add_argument('--item_removal', type=bool, default=False, help='Item removal flag')
-    parser.add_argument('--knowledge_evolving_time_step', type=int, default=0,
-                        help='Knowledge evolving time step')
-    parser.add_argument('--method', type=str, default='expected_reward',
-                        help='Which single reward method to run. E.g. "expected_reward", "epsilon_greedy", etc.')
+    parser.add_argument("--dim_theta", type=int, default=10, help="Dimension of theta")
+    parser.add_argument(
+        "--n_students", type=int, default=100, help="Number of students"
+    )
+    parser.add_argument("--n_rounds", type=int, default=50, help="Number of rounds")
+    parser.add_argument(
+        "--exploration_parameter",
+        type=float,
+        default=0.1,
+        help="(Deprecated) Single exploration parameter - not used directly, we do grid search now.",
+    )
+    parser.add_argument("--epsilon", type=float, default=0.1, help="Epsilon parameter")
+    parser.add_argument("--lambda_", type=float, default=0.01, help="Lambda parameter")
+    parser.add_argument("--corpus_nb_items", type=int, default=50, help="Corpus object")
+    parser.add_argument(
+        "--cold_start_len", type=int, default=5, help="Cold start length"
+    )
+    parser.add_argument(
+        "--item_removal", type=bool, default=False, help="Item removal flag"
+    )
+    parser.add_argument(
+        "--knowledge_evolving_time_step",
+        type=int,
+        default=0,
+        help="Knowledge evolving time step",
+    )
+    parser.add_argument(
+        "--method",
+        type=str,
+        default="expected_reward",
+        help='Which single reward method to run. E.g. "expected_reward", "epsilon_greedy", etc.',
+    )
 
     args = parser.parse_args()
 
@@ -207,7 +238,7 @@ if __name__ == "__main__":
             cold_start_len=args.cold_start_len,
             item_removal=args.item_removal,
             knowledge_evolving_time_step=args.knowledge_evolving_time_step,
-            epsilon=args.epsilon
+            epsilon=args.epsilon,
         )
         # Tag each row with the exploration_parameter used
         df_metrics["exploration_parameter"] = epar
@@ -215,12 +246,19 @@ if __name__ == "__main__":
 
     # Concatenate all results
     df_all = pd.concat(all_results, ignore_index=True)
-    outname_csv = f"parallel_grid_search_{args.method}_results.csv"
+
+    csv_dir = "csv_files"
+    os.makedirs(csv_dir, exist_ok=True)
+
+    outname_csv = os.path.join(
+        csv_dir,
+        f"gs_ir_{args.item_removal}_nc_{args.corpus_nb_items}_dim_{args.dim_theta}_ke_{args.knowledge_evolving_time_step}s{args.method}_results.csv",
+    )
     df_all.to_csv(outname_csv, index=False)
 
     # Plot
     plt.figure(figsize=(12, 8))
-    metrics = ["Expected Reward", "Regret", "Real Reward"]
+    metrics = ["Cumulative Expected Reward", "Cumulative Regret", "Cumulative Real Reward"]
 
     for idx, metric in enumerate(metrics, start=1):
         plt.subplot(3, 1, idx)
@@ -233,7 +271,19 @@ if __name__ == "__main__":
 
     plt.suptitle(f"Method: {args.method} | Grid Search over exploration_parameter")
     plt.tight_layout()
+    # Ensure the 'figures' directory exists
+    figures_dir = "figures"
+    os.makedirs(figures_dir, exist_ok=True)
+
+    # Save the figure to the 'figures' folder
+    outname_pdf = os.path.join(
+        figures_dir,
+        f"gs_ir_{args.item_removal}_nc_{args.corpus_nb_items}_dim_{args.dim_theta}_ke_{args.knowledge_evolving_time_step}s{args.method}_plot.pdf",
+    )
+    plt.savefig(outname_pdf)
     outname_pdf = f"parallele_grid_search_{args.method}_plot.pdf"
     plt.savefig(outname_pdf)
 
-    print(f"\nDone! The results are in '{outname_csv}' and the plot is in '{outname_pdf}'.")
+    print(
+        f"\nDone! The results are in '{outname_csv}' and the plot is in '{outname_pdf}'."
+    )
