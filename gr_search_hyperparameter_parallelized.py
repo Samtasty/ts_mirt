@@ -34,6 +34,7 @@ def run_one_student(
     item_removal,
     knowledge_evolving_time_step,
     epsilon,
+    dynamic_exploration
 ):
     """
     Simulate one student using the specified bandit method and hyperparams.
@@ -59,6 +60,7 @@ def run_one_student(
     # If knowledge evolves in chunks
     if knowledge_evolving_time_step > 0:
         chunks = n_rounds // knowledge_evolving_time_step
+        start_round = 0
         for _ in range(chunks):
             student.bandit_simulation(
                 knowledge_evolving_time_step,
@@ -66,7 +68,10 @@ def run_one_student(
                 reward_method_name=method_name,
                 epsilon=epsilon,
                 item_removal=item_removal,
+                start_round=start_round,
+                dynamic_exploration=dynamic_exploration,
             )
+            start_round += knowledge_evolving_time_step
             # then artificially "improve" knowledge
             student.improvement(generate_learning_gains(gen_student.theta_dim))
         # leftover steps if n_rounds not divisible by knowledge_evolving_time_step
@@ -78,6 +83,8 @@ def run_one_student(
                 reward_method_name=method_name,
                 epsilon=epsilon,
                 item_removal=item_removal,
+                start_round=start_round,
+                dynamic_exploration=dynamic_exploration
             )
     else:
         # Single chunk
@@ -87,6 +94,8 @@ def run_one_student(
             reward_method_name=method_name,
             epsilon=epsilon,
             item_removal=item_removal,
+            start_round=0,
+            dynamic_exploration=dynamic_exploration
         )
 
     # Return the arrays of interest
@@ -112,6 +121,7 @@ def run_experiment_parallel(
     item_removal,
     knowledge_evolving_time_step,
     epsilon,
+    dynamic_exploration
 ):
     """
     Parallel version of run_experiment:
@@ -132,6 +142,7 @@ def run_experiment_parallel(
             item_removal=item_removal,
             knowledge_evolving_time_step=knowledge_evolving_time_step,
             epsilon=epsilon,
+            dynamic_exploration=dynamic_exploration
         )
         for _ in range(n_students)
     )
@@ -195,12 +206,13 @@ if __name__ == "__main__":
     )
     parser.add_argument("--epsilon", type=float, default=0.1, help="Epsilon parameter")
     parser.add_argument("--lambda_", type=float, default=0.01, help="Lambda parameter")
+    parser.add_argument("--dynamic_exploration", type=int, default=0, help="Dynamic exploration flag")
     parser.add_argument("--corpus_nb_items", type=int, default=50, help="Corpus object")
     parser.add_argument(
         "--cold_start_len", type=int, default=5, help="Cold start length"
     )
     parser.add_argument(
-        "--item_removal", type=bool, default=False, help="Item removal flag"
+        "--item_removal", type=int, default=0, help="Item removal flag"
     )
     parser.add_argument(
         "--knowledge_evolving_time_step",
@@ -221,7 +233,7 @@ if __name__ == "__main__":
     corpus = Corpus(args.corpus_nb_items, args.dim_theta)
 
     # Define a grid of exploration parameters to try
-    exploration_grid = [0.01, 0.05, 0.1, 0.2, 0.5, 1.0]
+    exploration_grid = [0.01, 0.05, 0.1, 0.2, 0.5, 1.0,1.5]
 
     all_results = []
 
@@ -239,6 +251,7 @@ if __name__ == "__main__":
             item_removal=args.item_removal,
             knowledge_evolving_time_step=args.knowledge_evolving_time_step,
             epsilon=args.epsilon,
+            dynamic_exploration=args.dynamic_exploration
         )
         # Tag each row with the exploration_parameter used
         df_metrics["exploration_parameter"] = epar
@@ -249,16 +262,21 @@ if __name__ == "__main__":
 
     csv_dir = "csv_files"
     os.makedirs(csv_dir, exist_ok=True)
+    print(args.dynamic_exploration)
 
     outname_csv = os.path.join(
         csv_dir,
-        f"gs_ir_{args.item_removal}_nc_{args.corpus_nb_items}_dim_{args.dim_theta}_ke_{args.knowledge_evolving_time_step}s{args.method}_results.csv",
+        f"gs_ir_{args.item_removal}_nc_{args.corpus_nb_items}_dim_{args.dim_theta}_ke_{args.knowledge_evolving_time_step}_de_{args.dynamic_exploration}_s{args.method}_results.csv",
     )
     df_all.to_csv(outname_csv, index=False)
 
     # Plot
     plt.figure(figsize=(12, 8))
-    metrics = ["Cumulative Expected Reward", "Cumulative Regret", "Cumulative Real Reward"]
+    metrics = [
+        "Cumulative Expected Reward",
+        "Cumulative Regret",
+        "Cumulative Real Reward",
+    ]
 
     for idx, metric in enumerate(metrics, start=1):
         plt.subplot(3, 1, idx)
@@ -272,13 +290,13 @@ if __name__ == "__main__":
     plt.suptitle(f"Method: {args.method} | Grid Search over exploration_parameter")
     plt.tight_layout()
     # Ensure the 'figures' directory exists
-    figures_dir = "figures"
+    figures_dir = "fig2"
     os.makedirs(figures_dir, exist_ok=True)
 
     # Save the figure to the 'figures' folder
     outname_pdf = os.path.join(
         figures_dir,
-        f"gs_ir_{args.item_removal}_nc_{args.corpus_nb_items}_dim_{args.dim_theta}_ke_{args.knowledge_evolving_time_step}s{args.method}_plot.pdf",
+        f"gs_ir_{args.item_removal}_nc_{args.corpus_nb_items}_dim_{args.dim_theta}_ke_{args.knowledge_evolving_time_step}_de_{args.dynamic_exploration}_s_{args.method}_plot.pdf",
     )
     plt.savefig(outname_pdf)
     outname_pdf = f"parallele_grid_search_{args.method}_plot.pdf"

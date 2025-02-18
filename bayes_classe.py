@@ -83,9 +83,8 @@ class BayesianStudent(Student):
                     self.item_hidden_states[item_id], self.lambda_
                 )
             )
-            a=self.exploration_hidden_state_matrix[item_id].copy()
+            a = self.exploration_hidden_state_matrix[item_id].copy()
             self.inv_exploration_hidden_state_matrix[item_id] = np.linalg.inv(a)
-            
 
     def get_fitted_models(self, classifier):
         self.classifier = classifier
@@ -120,9 +119,9 @@ class BayesianStudent(Student):
     def expected_response_proxi(self, item):
         """Expected correctness probability using approximation."""
         item_vector = item.get_vector()
-        mu= self.mu.copy()
-        sigma=self.sigma.copy()
-        mu_a = mu @ item_vector[:-1] - item_vector[-1]
+        mu = self.mu.copy()
+        sigma = self.sigma.copy()
+        mu_a = mu @ item_vector[:-1] + item_vector[-1]
         sigma_a = item_vector[:-1] @ (sigma @ item_vector[:-1])
         return sigmoid(mu_a / np.sqrt(1 + np.pi * sigma_a / 8))
 
@@ -130,29 +129,32 @@ class BayesianStudent(Student):
         """expected resposne given the theta from ellipsoid minimization"""
         ellipsoid_theta = self.ellipsoid_theta.copy()
         return sigmoid(item.kcs @ ellipsoid_theta - item.difficulty)
-    
+
     def expected_response_hidden_state(self, item):
-        """ expected response using hidden state from dkt"""
+        """expected response using hidden state from dkt"""
         last_hidden_state = self.last_hidden_state.copy()
-        return self.fitted_models[item.id].predict_proba(
-            last_hidden_state.reshape(1, -1)
-        )[0][1],last_hidden_state
+        return (
+            self.fitted_models[item.id].predict_proba(last_hidden_state.reshape(1, -1))[
+                0
+            ][1],
+            last_hidden_state,
+        )
 
     ### Exploration Matrix ###
     def exploration_matrix(self):
         """Compute the exploration matrix."""
         items_id, _ = zip(*self.learning_trace)
         items = [self._get_item(item_id) for item_id in items_id]
-        v_matrix = np.array([item.get_vector() for item in items])
+        v_matrix = np.array([item.get_vector()[:-1] for item in items])
 
-        H = self.lambda_ * np.eye(len(self.theta) + 1) + v_matrix.T @ v_matrix
+        H = self.lambda_ * np.eye(len(self.theta)) + v_matrix.T @ v_matrix
         self.V = H
         self.inv_V = np.linalg.inv(H)  # Cached for reuse
 
     def update_exploration_matrix(self, item_id):
         """Update the exploration matrix with a new item."""
         item = self._get_item(item_id)
-        v = item.get_vector()
+        v = item.get_vector()[:-1]
         self.inv_V = self.inv_V - np.outer(self.inv_V @ v, v @ self.inv_V) / (
             1 + v @ self.inv_V @ v
         )
@@ -160,20 +162,20 @@ class BayesianStudent(Student):
     def item_exploration_value(self, item_id):
         """Compute the exploration value of an item."""
         item = self._get_item(item_id)
-        v = item.get_vector()
+        v = item.get_vector()[:-1]
         return np.sqrt(v @ self.inv_V @ v)
 
     def fisher_information_matrix(self):
         """Compute the Fisher information matrix."""
         items_id, _ = zip(*self.learning_trace)
         items = [self._get_item(item_id) for item_id in items_id]
-        fisher_matrix = np.zeros((len(self.theta) + 1, len(self.theta) + 1))
-
+        fisher_matrix = np.zeros((len(self.theta), len(self.theta)))
+        mle_theta=self.mle_theta.copy()
         for item in items:
             v = item.get_vector()
-            logit = v[:-1] @ self.mle_theta - v[-1]
+            logit = v[:-1] @ mle_theta + v[-1]
             denom = 2 + np.exp(logit) + np.exp(-logit)
-            fisher_matrix += np.outer(v, v) / denom
+            fisher_matrix += np.outer(v[:-1], v[:-1]) / denom
 
         self.F = fisher_matrix
         _, self.logdet = np.linalg.slogdet(self.F)
@@ -182,9 +184,10 @@ class BayesianStudent(Student):
         """Update the Fisher information matrix with a new item."""
         item = self._get_item(item_id)
         v = item.get_vector()
-        logit = v[:-1] @ self.mle_theta - v[-1]
+        mle_theta=self.mle_theta.copy() 
+        logit = v[:-1] @ mle_theta + v[-1]
         denom = 2 + np.exp(logit) + np.exp(-logit)
-        fisher_item = np.outer(v, v) / denom
+        fisher_item = np.outer(v[:-1], v[:-1]) / denom
 
         self.F += fisher_item
         _, self.logdet = np.linalg.slog
@@ -194,22 +197,22 @@ class BayesianStudent(Student):
         """Compute the Fisher information for an item."""
         item = self._get_item(item_id)
         v = item.get_vector()
-        logit = v[:-1] @ self.mle_theta - v[-1]
+        mle_theta=self.mle_theta.copy()
+        logit = v[:-1] @ mle_theta + v[-1]
         denom = 2 + np.exp(logit) + np.exp(-logit)
 
-        return np.outer(v, v) / denom
+        return np.outer(v[:-1], v[:-1]) / denom
 
     def update_hidden_state_exploration_matrix(self, item_id):
         """Update the exploration matrix with a new item."""
         item = self._get_item(item_id)
         v = item.kcs
         self.exploration_hidden_state_matrix[item_id] = (
-            self.exploration_hidden_state_matrix[item_id]
-            + np.outer(v, v)
+            self.exploration_hidden_state_matrix[item_id] + np.outer(v, v)
         )
-        self.inv_exploration_hidden_state_matrix[item_id] = self.inv_exploration_hidden_state_matrix[
+        self.inv_exploration_hidden_state_matrix[
             item_id
-        ] - np.outer(
+        ] = self.inv_exploration_hidden_state_matrix[item_id] - np.outer(
             self.inv_exploration_hidden_state_matrix[item_id] @ v,
             v @ self.inv_exploration_hidden_state_matrix[item_id],
         ) / (
@@ -262,17 +265,25 @@ class BayesianStudent(Student):
         reward = self._get_reward(item_id)
         response = self.expected_response_proxi(item)
         return reward * response
+    
+    def expected_reward_irt(self,item_id, exploration_parameter):
+        """Expected reward with IRT exploration."""
+       
+        new_fisher = self.F + self.fisher_info_item(item_id)
+        new_logdet = np.linalg.slogdet(new_fisher)[1]
+        return  new_logdet
 
     def expected_reward_from_last_hidden_state(self, item_id, exploration_parameter):
         """Expected reward with approximation exploration."""
-        item=self._get_item(item_id)
+        item = self._get_item(item_id)
         reward = self._get_reward(item_id)
-        response,last_hidden_state=self.expected_response_hidden_state(item)
-        explo_matrix=self.inv_exploration_hidden_state_matrix[item_id].copy()
-        return reward * response + exploration_parameter * np.sqrt(
-            last_hidden_state
-            @ (explo_matrix @ last_hidden_state.T)
-        )[0,0]
+        response, last_hidden_state = self.expected_response_hidden_state(item)
+        explo_matrix = self.inv_exploration_hidden_state_matrix[item_id].copy()
+        return (
+            reward * response
+            + exploration_parameter
+            * np.sqrt(last_hidden_state @ (explo_matrix @ last_hidden_state.T))[0, 0]
+        )
 
     def expected_reward_ellipsoid(self, item_id, exploration_parameter):
         """Expected reward with ellipsoid exploration."""
@@ -285,11 +296,12 @@ class BayesianStudent(Student):
     ### Item Selection ###
     def get_best_item(self, reward_method, exploration_parameter, epsilon, greedy):
         """Select the best item based on a reward method."""
-        
+
         rewards = {
             a: reward_method(a, exploration_parameter=exploration_parameter)
             for a in self.usable_items_index
         }
+        
         if greedy:
             return max(rewards, key=rewards.get)
         else:
@@ -303,28 +315,27 @@ class BayesianStudent(Student):
         """Optimize the prior using MAP."""
 
         def objective(x):
-            x = np.clip(x, -10, 10)
+            
 
             return -log_posterior_map(x, self.corpus, self.learning_trace, self.prior)
 
         init_param = self.mu.copy()
 
-        res = minimize(objective, init_param, method="BFGS")
+        res = minimize(objective, init_param,bounds=[(-5,5)]*self.theta_dim ,method="L-BFGS-B")
 
         a = res.x
-        b = res.hess_inv
+        b = res.hess_inv.todense()
         self.mu = a.copy()
-        self.sigma = b.copy()
+        self.sigma = np.array(b).copy()
         self.prior = multivariate_normal(mean=a, cov=b)
         self.prior_history.append(multivariate_normal(mean=a, cov=b))
         self.mu_history.append(a)
         self.sigma_history.append(b)
-
     def classical_optimization(self):
         """Optimize parameters using MLE."""
 
         def objective(x):
-            x = np.clip(x, -10, 10)
+            x= np.clip(x, -10, 10)
             return -log_posterior(x, self.corpus, self.learning_trace)
 
         res = minimize(objective, np.zeros_like(self.theta), method="BFGS")
@@ -339,8 +350,9 @@ class BayesianStudent(Student):
         """
 
         def objective(x):
-            x = np.clip(x, -10, 10)
-            return -reg_log_likelihood(x, self.corpus, self.learning_trace)
+            return -reg_log_likelihood(
+                x, self.corpus, self.learning_trace, self.lambda_
+            )
 
         res = minimize(objective, np.zeros_like(self.theta), method="BFGS")
         self.res = res
@@ -351,14 +363,13 @@ class BayesianStudent(Student):
     def optmization_from_ellipsoid(self):
         """Optimize parameters using ellipsoid method."""
 
-        def objective(x):
-            x = np.clip(x, -10, 10)
+        def objective(x):          
             items_id, outcomes = zip(*self.learning_trace)
             return ellipsoid_over_items(
                 x, self.reg_mle_theta, self.H_t_inv, self.corpus, items_id
             )
 
-        res = minimize(objective, np.zeros_like(self.theta), method="BFGS")
+        res = minimize(objective, np.zeros_like(self.theta),bounds=[(-5,5)]*self.theta_dim, method="L-BFGS-B")
         self.ellipsoid_theta = res.x
         self.ellipsoid_theta_history.append(self.ellipsoid_theta.copy())
 
@@ -375,7 +386,14 @@ class BayesianStudent(Student):
         return roc_auc, mean_acc, mse
 
     def bandit_simulation(
-        self, n_rounds, exploration_parameter, reward_method_name, epsilon,item_removal
+        self,
+        n_rounds,
+        exploration_parameter,
+        reward_method_name,
+        epsilon,
+        item_removal,
+        start_round=0,
+        dynamic_exploration=False,
     ):
         """Simulate the bandit problem."""
         reward_methods = {
@@ -388,232 +406,133 @@ class BayesianStudent(Student):
             "expected_reward_from_last_hidden_state": self.expected_reward_from_last_hidden_state,
             "expected_reward_ellipsoid": self.expected_reward_ellipsoid,
             "epsilon_greedy": self.expected_reward_mle,
-            "random_baseline":  None
-
-            
+            "random_baseline": 0,
+            "expected_reward_irt": self.expected_reward_irt,
         }
         reward_method = reward_methods[reward_method_name]
 
-
-        #instantiate the exploration matrix or fisher_information matrix  
+        # instantiate the exploration matrix or fisher_information matrix
         self.exploration_matrix()
-        
 
+        for t in range(start_round + 1, start_round + n_rounds + 1):
 
-        for _ in range(n_rounds):
+            if dynamic_exploration:
+                dynamic_exploration_parameter = exploration_parameter * np.sqrt(np.log(t))
+            elif not dynamic_exploration:
+
+                dynamic_exploration_parameter = exploration_parameter
 
             if reward_method_name == "random_baseline":
                 item_id = np.random.choice(self.usable_items_index)
                 response = self.response(self._get_item(item_id))
 
             # do the optimization from the learning trace
-            if reward_method_name == "expected_reward_ts" or reward_method_name=='expected_reward_proxi':
+            if (
+                reward_method_name == "expected_reward_ts"
+                or reward_method_name == "expected_reward_proxi"
+            ):
                 self.optimize_prior()
                 self.sample_distribution()
                 item_id = self.get_best_item(
-                reward_method,
-                exploration_parameter=exploration_parameter,
-                epsilon=epsilon,
-                greedy=1,)
+                    reward_method,
+                    exploration_parameter=dynamic_exploration_parameter,
+                    epsilon=epsilon,
+                    greedy=1,
+                )
                 response = self.response(self._get_item(item_id))
-                
 
             if reward_method_name == "expected_reward_fisher":
 
                 self.classical_optimization()
                 self.fisher_information_matrix()
-                item_id=self.get_best_item(
-                reward_method,
-                exploration_parameter=exploration_parameter,
-                epsilon=epsilon,
-                greedy=1,)
+                item_id = self.get_best_item(
+                    reward_method,
+                    exploration_parameter=dynamic_exploration_parameter,
+                    epsilon=epsilon,
+                    greedy=1,
+                )
                 response = self.response(self._get_item(item_id))
-                
+
+            if reward_method_name == "expected_reward_irt":
+                self.classical_optimization()
+                self.fisher_information_matrix()
+                item_id = self.get_best_item(
+                    reward_method,
+                    exploration_parameter=dynamic_exploration_parameter,
+                    epsilon=epsilon,
+                    greedy=1,
+                )
+                response = self.response(self._get_item(item_id))    
 
             if reward_method_name == "expected_reward_ellipsoid":
                 self.regularized_optimization()
                 self.optmization_from_ellipsoid()
-                item_id=self.get_best_item(
-                reward_method,
-                exploration_parameter=exploration_parameter,
-                epsilon=epsilon,
-                greedy=1,)
+                item_id = self.get_best_item(
+                    reward_method,
+                    exploration_parameter=dynamic_exploration_parameter,
+                    epsilon=epsilon,
+                    greedy=1,
+                )
                 response = self.response(self._get_item(item_id))
                 self.update_exploration_matrix(item_id)
-            if reward_method_name == "expected_reward_mle" or reward_method_name == "expected_reward_ucb" or reward_method_name=='epsilon_greedy':
-
-                
+            if (
+                reward_method_name == "expected_reward_mle"
+                or reward_method_name == "expected_reward_ucb"
+                or reward_method_name == "epsilon_greedy"
+            ):
 
                 self.classical_optimization()
                 if reward_method_name == "epsilon_greedy":
 
                     item_id = self.get_best_item(
-                    reward_method,
-                    exploration_parameter=exploration_parameter,
-                    epsilon=epsilon,
-                    greedy=0,
-                )
+                        reward_method,
+                        exploration_parameter=dynamic_exploration_parameter,
+                        epsilon=epsilon,
+                        greedy=0,
+                    )
                 else:
 
                     item_id = self.get_best_item(
                         reward_method,
-                        exploration_parameter=exploration_parameter,
+                        exploration_parameter=dynamic_exploration_parameter,
                         epsilon=epsilon,
                         greedy=1,
                     )
                 response = self.response(self._get_item(item_id))
                 self.update_exploration_matrix(item_id)
-                
-                
-            if reward_method_name == "expected_reward_from_last_hidden_state": 
+
+            if reward_method_name == "expected_reward_from_last_hidden_state":
                 item_id = self.get_best_item(
                     reward_method,
-                    exploration_parameter=exploration_parameter,
+                    exploration_parameter=dynamic_exploration_parameter,
                     epsilon=epsilon,
                     greedy=1,
                 )
                 response = self.response(self._get_item(item_id))
                 self.update_hidden_state_exploration_matrix(item_id)
                 self.get_last_hidden_state()
-                
-
-
 
             elif reward_method_name == "expected_reward":
                 item_id = self.get_best_item(
                     reward_method,
-                    exploration_parameter=exploration_parameter,
+                    exploration_parameter=dynamic_exploration_parameter,
                     epsilon=epsilon,
                     greedy=1,
                 )
                 response = self.response(self._get_item(item_id))
 
-
             best_item_id = self.get_best_item(
                 self.expected_reward, exploration_parameter=0, epsilon=0, greedy=True
             )
 
-
-
             reward_item = self._get_reward(item_id)
             self.rewards_list.append(response * reward_item)
-            a = self.expected_reward(item_id, exploration_parameter).copy()
-            b = self.expected_reward(best_item_id, exploration_parameter).copy()
+            a = self.expected_reward(item_id, dynamic_exploration_parameter).copy()
+            b = self.expected_reward(best_item_id, dynamic_exploration_parameter).copy()
             self.expected_reward_list.append(a)
             self.regrets_list.append(b - a)
             if item_removal:
 
                 self.usable_items_index.remove(item_id)
 
-
-    def plot_metrics(self):
-        """Plot the expected reward list, regret list, and real reward list."""
-        rounds = range(len(self.rewards_list))
-
-        plt.figure(figsize=(12, 8))
-
-        plt.subplot(3, 1, 1)
-        plt.plot(rounds, self.expected_reward_list, label="Expected Reward")
-        plt.xlabel("Rounds")
-        plt.ylabel("Expected Reward")
-        plt.legend()
-
-        plt.subplot(3, 1, 2)
-        plt.plot(rounds, self.regrets_list, label="Regret", color="orange")
-        plt.xlabel("Rounds")
-        plt.ylabel("Regret")
-        plt.legend()
-
-        plt.subplot(3, 1, 3)
-        plt.plot(rounds, self.rewards_list, label="Real Reward", color="green")
-        plt.xlabel("Rounds")
-        plt.ylabel("Real Reward")
-        plt.legend()
-
-        plt.tight_layout()
-        plt.show()
-
-
-
-def plot_average_metrics(dim_theta,n_students, n_rounds,exploration_parameter,lambda_,corpus,cold_start_len,item_removal,knowledge_evolving_time_step):
-    """Plot the average metrics of n students over n_rounds for different reward methods."""
-    reward_methods = {
-        'Expected Reward': 'expected_reward',
-        'Expected Reward MLE': 'expected_reward_mle',
-        'Expected Reward UCB': 'expected_reward_ucb',
-        'Expected Reward Fisher': 'expected_reward_fisher',
-        'Expected Reward Thompson': 'expected_reward_ts',
-        'expected Reward Proxi':  'expected_reward_proxi',
-        'expected Reward DKT':  'expected_reward_from_last_hidden_state',
-        "Random Baseline": "random_baseline"
-    }
-
-    avg_metrics = {method_name: {'expected_rewards': np.zeros(n_rounds),
-                                 'regrets': np.zeros(n_rounds),
-                                 'real_rewards': np.zeros(n_rounds)}
-                   for method_name in reward_methods.keys()}
-    
-    dic_students={i:generate_student(dim_theta) for i in range(200)}
-
-    for i in range(200):
-        dic_students[i].simulate_pluriel(items=corpus.list_items(np.random.randint(0,corpus.nb_items,size=cold_start_len)))
-
-    model=DKT(input_dim=200,hidden_dim=5,output_dim=100)
-    new_trained_model,item_hidden_states, item_outcomes= training_model(model,dic_students,corpus=corpus,epochs=20,batch_size=16,learning_rate=0.01)
-
-
-    for method_name, method in reward_methods.items():
-        for _ in range(n_students):
-            gen_student=generate_student(dim_theta)
-            theta = gen_student.theta
-            student = BayesianStudent(theta, corpus=corpus, mu=np.zeros(gen_student.theta_dim), sigma=np.eye(gen_student.theta_dim))
-            student.simulate_pluriel(corpus.list_items(0,corpus.nb_items,size=cold_start_len))
-            student.get_trained_model(new_trained_model,item_hidden_states, item_outcomes)
-            student.get_fitted_models(LogisticRegression())
-            if knowledge_evolving_time_step>0:
-
-                for _ in range(n_rounds//knowledge_evolving_time_step):
-
-                    student.bandit_simulation(knowledge_evolving_time_step, exploration_parameter=exploration_parameter, reward_method=getattr(student, method), lambda_=lambda_, epsilon=None, greedy=True,item_removal=item_removal)
-                    student.improvement(generate_learning_gains(gen_student.theta_dim))
                 
-            else:
-            
-                student.bandit_simulation(n_rounds, exploration_parameter=exploration_parameter, reward_method=getattr(student, method), lambda_=lambda_, epsilon=None, greedy=True,item_removal=item_removal)
-            
-            avg_metrics[method_name]['expected_rewards'] += np.array(student.expected_reward_list)
-            avg_metrics[method_name]['regrets'] += np.array(student.regrets_list)
-            avg_metrics[method_name]['real_rewards'] += np.array(student.rewards_list)
-
-        avg_metrics[method_name]['expected_rewards'] /= n_students
-        avg_metrics[method_name]['regrets'] /= n_students
-        avg_metrics[method_name]['real_rewards'] /= n_students
-
-    rounds = range(n_rounds)
-
-    plt.figure(figsize=(24, 16))
-
-    for method_name in reward_methods.keys():
-        plt.subplot(3, 1, 1)
-        plt.plot(rounds, avg_metrics[method_name]['expected_rewards'], label=f'Average Expected Reward ({method_name})')
-        plt.xlabel('Rounds')
-        plt.ylabel('Average Expected Reward')
-        plt.legend()
-
-        plt.subplot(3, 1, 2)
-        plt.plot(rounds, avg_metrics[method_name]['regrets'], label=f'Average Regret ({method_name})')
-        plt.xlabel('Rounds')
-        plt.ylabel('Average Regret')
-        plt.legend()
-
-        plt.subplot(3, 1, 3)
-        plt.plot(rounds, avg_metrics[method_name]['real_rewards'], label=f'Average Real Reward ({method_name})')
-        plt.xlabel('Rounds')
-        plt.ylabel('Average Real Reward')
-        plt.legend()
-
-    plt.tight_layout()
-    plt.show()
-
-
-# %%

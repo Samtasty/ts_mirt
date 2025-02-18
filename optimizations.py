@@ -36,11 +36,11 @@ def fisher_information(w,corpus,learning_trace):
         H += p * q * outer_product
     return H
 
-def reg_log_likelihood(w,corpus,learning_trace):
+def reg_log_likelihood(w,corpus,learning_trace,lambda_):
     items_id,outcomes=zip(*learning_trace)      
     corrects=[corpus.dic_rewards[j]*np.log(corpus.get_item(j).expected_response(w)+1e-10) for j in items_id]
     errors=[corpus.dic_rewards[j]*np.log(1-corpus.get_item(j).expected_response(w)+1e-10) for j in items_id]
-    L=np.sum([outcomes[j]*corrects[j]+(1-outcomes[j])*errors[j] for j in range(len(outcomes))])
+    L=np.sum([outcomes[j]*corrects[j]+(1-outcomes[j])*errors[j] for j in range(len(outcomes))])+lambda_*w@w
     return L
 
 

@@ -1,0 +1,66 @@
+\begin{tabular}{|l|c|c|c|c|c|c|}
+\toprule
+Method & k & Item Removal & Regret (Round 5) & Regret (Round 10) & Regret (Round 20) & Regret (Round 30) \\
+\midrule
+Classical Thompson Sampling & 0 & No & 2.450000 & 5.890000 & 14.060000 & 21.260000 \\
+Classical Thompson Sampling & 0 & Yes & 2.340000 & 4.790000 & 8.110000 & 11.230000 \\
+Classical Thompson Sampling & 2 & No & 1.720000 & 4.100000 & 7.870000 & 14.630000 \\
+Classical Thompson Sampling & 2 & Yes & 1.390000 & 3.460000 & 15.460000 & 30.840000 \\
+Classical Thompson Sampling & 5 & No & 8.020000 & 10.560000 & 15.360000 & 19.810000 \\
+Classical Thompson Sampling & 5 & Yes & 1.890000 & 3.440000 & 9.340000 & 14.550000 \\
+Direct Bayesian Inference & 0 & No & 4.270000 & 8.540000 & 17.070000 & 25.610000 \\
+Direct Bayesian Inference & 0 & Yes & 3.820000 & 5.900000 & 9.520000 & 12.820000 \\
+Direct Bayesian Inference & 2 & No & 3.650000 & 8.120000 & 12.900000 & 12.900000 \\
+Direct Bayesian Inference & 2 & Yes & 2.280000 & 2.750000 & 6.300000 & 12.930000 \\
+Direct Bayesian Inference & 5 & No & 0.000000 & 0.000000 & 0.000000 & 0.000000 \\
+Direct Bayesian Inference & 5 & Yes & 3.700000 & 7.180000 & 13.580000 & 18.800000 \\
+Epsilon-Greedy & 0 & No & 4.300000 & 8.580000 & 17.130000 & 25.120000 \\
+Epsilon-Greedy & 0 & Yes & 3.040000 & 4.430000 & 6.430000 & 9.890000 \\
+Epsilon-Greedy & 2 & No & 2.170000 & 4.210000 & 8.020000 & 22.260000 \\
+Epsilon-Greedy & 2 & Yes & 1.610000 & 2.820000 & 12.600000 & 24.080000 \\
+Epsilon-Greedy & 5 & No & 0.000000 & 0.000000 & 0.000000 & 4.420000 \\
+Epsilon-Greedy & 5 & Yes & 4.350000 & 6.350000 & 8.130000 & 13.230000 \\
+Fisher Information Exploration & 0 & No & 4.370000 & 8.950000 & 18.110000 & 27.030000 \\
+Fisher Information Exploration & 0 & Yes & 3.210000 & 5.910000 & 8.750000 & 11.630000 \\
+Fisher Information Exploration & 2 & No & 2.400000 & 5.130000 & 12.360000 & 23.310000 \\
+Fisher Information Exploration & 2 & Yes & 1.520000 & 2.850000 & 9.310000 & 23.090000 \\
+Fisher Information Exploration & 5 & No & 0.000000 & 0.000000 & 0.000000 & 0.000000 \\
+Fisher Information Exploration & 5 & Yes & 4.350000 & 6.920000 & 10.000000 & 11.010000 \\
+GLM-UCB & 0 & No & 3.780000 & 6.810000 & 13.420000 & 20.040000 \\
+GLM-UCB & 0 & Yes & 3.760000 & 5.810000 & 8.170000 & 10.240000 \\
+GLM-UCB & 2 & No & 2.930000 & 6.320000 & 9.290000 & 17.050000 \\
+GLM-UCB & 2 & Yes & 1.390000 & 3.470000 & 10.920000 & 21.710000 \\
+GLM-UCB & 5 & No & 0.000000 & 0.000000 & 5.190000 & 10.070000 \\
+GLM-UCB & 5 & Yes & 4.040000 & 7.710000 & 12.830000 & 20.300000 \\
+Greedy Algorithm & 0 & No & 4.230000 & 8.330000 & 16.590000 & 23.600000 \\
+Greedy Algorithm & 0 & Yes & 1.970000 & 4.610000 & 7.380000 & 7.750000 \\
+Greedy Algorithm & 2 & No & 1.600000 & 4.080000 & 7.260000 & 14.430000 \\
+Greedy Algorithm & 2 & Yes & 1.560000 & 1.710000 & 7.790000 & 16.560000 \\
+Greedy Algorithm & 5 & No & 0.000000 & 0.000000 & 0.490000 & 0.490000 \\
+Greedy Algorithm & 5 & Yes & 4.350000 & 8.080000 & 13.620000 & 18.350000 \\
+IRT decision rule & 0 & No & 2.960000 & 6.970000 & 13.410000 & 20.560000 \\
+IRT decision rule & 0 & Yes & 4.070000 & 7.250000 & 12.420000 & 17.600000 \\
+IRT decision rule & 2 & No & 2.430000 & 6.260000 & 18.470000 & 38.890000 \\
+IRT decision rule & 2 & Yes & 1.360000 & 5.810000 & 14.360000 & 22.140000 \\
+IRT decision rule & 5 & No & 9.180000 & 20.580000 & 42.320000 & 64.470000 \\
+IRT decision rule & 5 & Yes & 4.250000 & 7.980000 & 19.990000 & 31.980000 \\
+Improved UCB & 0 & No & 2.730000 & 5.460000 & 10.910000 & 16.400000 \\
+Improved UCB & 0 & Yes & 4.340000 & 7.820000 & 15.650000 & 22.580000 \\
+Improved UCB & 2 & No & 3.070000 & 5.760000 & 13.810000 & 27.700000 \\
+Improved UCB & 2 & Yes & 2.830000 & 4.260000 & 6.460000 & 12.080000 \\
+Improved UCB & 5 & No & 8.890000 & 20.830000 & 41.680000 & 55.700000 \\
+Improved UCB & 5 & Yes & 3.720000 & 9.180000 & 15.920000 & 23.050000 \\
+Optimal Policy & 0 & No & 0.000000 & 0.000000 & 0.000000 & 0.000000 \\
+Optimal Policy & 0 & Yes & 0.000000 & 0.000000 & 0.000000 & 0.000000 \\
+Optimal Policy & 2 & No & 0.000000 & 0.000000 & 0.000000 & 0.000000 \\
+Optimal Policy & 2 & Yes & 0.000000 & 0.000000 & 0.000000 & 0.000000 \\
+Optimal Policy & 5 & No & 0.000000 & 0.000000 & 0.000000 & 0.000000 \\
+Optimal Policy & 5 & Yes & 0.000000 & 0.000000 & 0.000000 & 0.000000 \\
+Random Baseline & 0 & No & 3.350000 & 6.700000 & 13.370000 & 18.460000 \\
+Random Baseline & 0 & Yes & 3.060000 & 6.190000 & 14.430000 & 21.270000 \\
+Random Baseline & 2 & No & 2.330000 & 6.740000 & 18.950000 & 31.170000 \\
+Random Baseline & 2 & Yes & 2.140000 & 4.550000 & 21.530000 & 37.850000 \\
+Random Baseline & 5 & No & 11.780000 & 23.580000 & 43.430000 & 68.960000 \\
+Random Baseline & 5 & Yes & 3.490000 & 8.990000 & 21.720000 & 34.500000 \\
+\bottomrule
+\end{tabular}

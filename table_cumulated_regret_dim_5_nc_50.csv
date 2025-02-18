@@ -1,0 +1,241 @@
+Method,knowledge_evolving_time_step,item_removal,Round,Cumulative Regret
+Optimal Policy,0,0,5,0.0
+Optimal Policy,0,0,10,0.0
+Optimal Policy,0,0,20,0.0
+Optimal Policy,0,0,30,0.0
+Greedy Algorithm,0,0,5,4.226308214098582
+Greedy Algorithm,0,0,10,8.327502669193514
+Greedy Algorithm,0,0,20,16.59151486070406
+Greedy Algorithm,0,0,30,23.602107080279676
+Epsilon-Greedy,0,0,5,4.3022602836438235
+Epsilon-Greedy,0,0,10,8.579243292472755
+Epsilon-Greedy,0,0,20,17.13320931013062
+Epsilon-Greedy,0,0,30,25.12004999074035
+GLM-UCB,0,0,5,3.782234856156914
+GLM-UCB,0,0,10,6.809849223392947
+GLM-UCB,0,0,20,13.424244420472261
+GLM-UCB,0,0,30,20.038639617551564
+Fisher Information Exploration,0,0,5,4.365513593231336
+Fisher Information Exploration,0,0,10,8.945726531016536
+Fisher Information Exploration,0,0,20,18.105236198338666
+Fisher Information Exploration,0,0,30,27.03052818927052
+Classical Thompson Sampling,0,0,5,2.447512600486972
+Classical Thompson Sampling,0,0,10,5.893460363670305
+Classical Thompson Sampling,0,0,20,14.060655941809886
+Classical Thompson Sampling,0,0,30,21.26455071215037
+Direct Bayesian Inference,0,0,5,4.267572195340975
+Direct Bayesian Inference,0,0,10,8.53514439068195
+Direct Bayesian Inference,0,0,20,17.070288781363907
+Direct Bayesian Inference,0,0,30,25.605433172045863
+Improved UCB,0,0,5,2.727508387217571
+Improved UCB,0,0,10,5.455016774435143
+Improved UCB,0,0,20,10.910033548870286
+Improved UCB,0,0,30,16.39906367019525
+Random Baseline,0,0,5,3.3475240301993194
+Random Baseline,0,0,10,6.703339713210833
+Random Baseline,0,0,20,13.369020264777351
+Random Baseline,0,0,30,18.459590005346612
+IRT decision rule,0,0,5,2.963339531140332
+IRT decision rule,0,0,10,6.973855298835819
+IRT decision rule,0,0,20,13.411014373318949
+IRT decision rule,0,0,30,20.556226975967487
+Optimal Policy,0,1,5,0.0
+Optimal Policy,0,1,10,0.0
+Optimal Policy,0,1,20,0.0
+Optimal Policy,0,1,30,0.0
+Greedy Algorithm,0,1,5,1.9710288393294237
+Greedy Algorithm,0,1,10,4.605516771925349
+Greedy Algorithm,0,1,20,7.379209925588055
+Greedy Algorithm,0,1,30,7.74539480000591
+Epsilon-Greedy,0,1,5,3.0388297619921363
+Epsilon-Greedy,0,1,10,4.428184941069662
+Epsilon-Greedy,0,1,20,6.427060113399281
+Epsilon-Greedy,0,1,30,9.887713965423345
+GLM-UCB,0,1,5,3.763313221294998
+GLM-UCB,0,1,10,5.81237800991774
+GLM-UCB,0,1,20,8.17172452396645
+GLM-UCB,0,1,30,10.24183049657766
+Fisher Information Exploration,0,1,5,3.2136930568497326
+Fisher Information Exploration,0,1,10,5.913244626765717
+Fisher Information Exploration,0,1,20,8.751305982912564
+Fisher Information Exploration,0,1,30,11.629859386497225
+Classical Thompson Sampling,0,1,5,2.344206121947596
+Classical Thompson Sampling,0,1,10,4.788053542096756
+Classical Thompson Sampling,0,1,20,8.109993103209403
+Classical Thompson Sampling,0,1,30,11.23435116255568
+Direct Bayesian Inference,0,1,5,3.815807230400284
+Direct Bayesian Inference,0,1,10,5.902729905725837
+Direct Bayesian Inference,0,1,20,9.523765956893326
+Direct Bayesian Inference,0,1,30,12.821707865718032
+Improved UCB,0,1,5,4.336652114563502
+Improved UCB,0,1,10,7.821387278539806
+Improved UCB,0,1,20,15.64542738357233
+Improved UCB,0,1,30,22.582338524674892
+Random Baseline,0,1,5,3.055404305373828
+Random Baseline,0,1,10,6.185395447956928
+Random Baseline,0,1,20,14.428826570223553
+Random Baseline,0,1,30,21.265690918675713
+IRT decision rule,0,1,5,4.0726059268899055
+IRT decision rule,0,1,10,7.250147455294292
+IRT decision rule,0,1,20,12.418617825690802
+IRT decision rule,0,1,30,17.603610745206538
+Optimal Policy,5,0,5,0.0
+Optimal Policy,5,0,10,0.0
+Optimal Policy,5,0,20,0.0
+Optimal Policy,5,0,30,0.0
+Greedy Algorithm,5,0,5,0.0
+Greedy Algorithm,5,0,10,0.0
+Greedy Algorithm,5,0,20,0.4906017154586304
+Greedy Algorithm,5,0,30,0.4906017154586304
+Epsilon-Greedy,5,0,5,0.0
+Epsilon-Greedy,5,0,10,0.0
+Epsilon-Greedy,5,0,20,0.0
+Epsilon-Greedy,5,0,30,4.419834656521896
+GLM-UCB,5,0,5,0.0
+GLM-UCB,5,0,10,0.0
+GLM-UCB,5,0,20,5.190261570052874
+GLM-UCB,5,0,30,10.07033475176465
+Fisher Information Exploration,5,0,5,0.0
+Fisher Information Exploration,5,0,10,0.0
+Fisher Information Exploration,5,0,20,0.0
+Fisher Information Exploration,5,0,30,0.0
+Classical Thompson Sampling,5,0,5,8.022370502519378
+Classical Thompson Sampling,5,0,10,10.555550688707282
+Classical Thompson Sampling,5,0,20,15.359822466521006
+Classical Thompson Sampling,5,0,30,19.813639056399367
+Direct Bayesian Inference,5,0,5,0.0
+Direct Bayesian Inference,5,0,10,0.0
+Direct Bayesian Inference,5,0,20,0.0
+Direct Bayesian Inference,5,0,30,0.0
+Improved UCB,5,0,5,8.89142743831669
+Improved UCB,5,0,10,20.833620081800166
+Improved UCB,5,0,20,41.68357105201056
+Improved UCB,5,0,30,55.6973139230815
+Random Baseline,5,0,5,11.783845842232274
+Random Baseline,5,0,10,23.57519775224054
+Random Baseline,5,0,20,43.431014894052524
+Random Baseline,5,0,30,68.95973701418015
+IRT decision rule,5,0,5,9.179566130975441
+IRT decision rule,5,0,10,20.578059293322045
+IRT decision rule,5,0,20,42.323966839423015
+IRT decision rule,5,0,30,64.4681507384029
+Optimal Policy,5,1,5,0.0
+Optimal Policy,5,1,10,0.0
+Optimal Policy,5,1,20,0.0
+Optimal Policy,5,1,30,0.0
+Greedy Algorithm,5,1,5,4.348382056281109
+Greedy Algorithm,5,1,10,8.079262252162046
+Greedy Algorithm,5,1,20,13.61580831814203
+Greedy Algorithm,5,1,30,18.353645537735478
+Epsilon-Greedy,5,1,5,4.348382056281109
+Epsilon-Greedy,5,1,10,6.346880816746658
+Epsilon-Greedy,5,1,20,8.129576874099266
+Epsilon-Greedy,5,1,30,13.228291487957
+GLM-UCB,5,1,5,4.037081633476024
+GLM-UCB,5,1,10,7.706202141776406
+GLM-UCB,5,1,20,12.82837554240521
+GLM-UCB,5,1,30,20.30223294417819
+Fisher Information Exploration,5,1,5,4.348382056281109
+Fisher Information Exploration,5,1,10,6.916190759924472
+Fisher Information Exploration,5,1,20,10.002036625085642
+Fisher Information Exploration,5,1,30,11.012703911337523
+Classical Thompson Sampling,5,1,5,1.8855489974717496
+Classical Thompson Sampling,5,1,10,3.44053213105906
+Classical Thompson Sampling,5,1,20,9.338172685406875
+Classical Thompson Sampling,5,1,30,14.546921657023908
+Direct Bayesian Inference,5,1,5,3.6994060221978167
+Direct Bayesian Inference,5,1,10,7.179242773075818
+Direct Bayesian Inference,5,1,20,13.581706201301904
+Direct Bayesian Inference,5,1,30,18.802442796747172
+Improved UCB,5,1,5,3.7202047034481414
+Improved UCB,5,1,10,9.181376201246017
+Improved UCB,5,1,20,15.915907378710026
+Improved UCB,5,1,30,23.047701111177112
+Random Baseline,5,1,5,3.4872696273680726
+Random Baseline,5,1,10,8.988677784255335
+Random Baseline,5,1,20,21.715629092011415
+Random Baseline,5,1,30,34.504918824797755
+IRT decision rule,5,1,5,4.245578400867617
+IRT decision rule,5,1,10,7.984044049592039
+IRT decision rule,5,1,20,19.987129988222883
+IRT decision rule,5,1,30,31.982949257879394
+Optimal Policy,2,0,5,0.0
+Optimal Policy,2,0,10,0.0
+Optimal Policy,2,0,20,0.0
+Optimal Policy,2,0,30,0.0
+Greedy Algorithm,2,0,5,1.602039155356881
+Greedy Algorithm,2,0,10,4.081604171330185
+Greedy Algorithm,2,0,20,7.264361951655388
+Greedy Algorithm,2,0,30,14.432271264021079
+Epsilon-Greedy,2,0,5,2.166580430627794
+Epsilon-Greedy,2,0,10,4.20768749660469
+Epsilon-Greedy,2,0,20,8.021183805056497
+Epsilon-Greedy,2,0,30,22.262141600869978
+GLM-UCB,2,0,5,2.9253645255668963
+GLM-UCB,2,0,10,6.317313814391738
+GLM-UCB,2,0,20,9.293114674206645
+GLM-UCB,2,0,30,17.04589827742886
+Fisher Information Exploration,2,0,5,2.4025483075902994
+Fisher Information Exploration,2,0,10,5.127969003279108
+Fisher Information Exploration,2,0,20,12.362947865056487
+Fisher Information Exploration,2,0,30,23.31079440118379
+Classical Thompson Sampling,2,0,5,1.7177807865378365
+Classical Thompson Sampling,2,0,10,4.0998391418285625
+Classical Thompson Sampling,2,0,20,7.8735982621517415
+Classical Thompson Sampling,2,0,30,14.63440292132265
+Direct Bayesian Inference,2,0,5,3.654091780862718
+Direct Bayesian Inference,2,0,10,8.12081197657583
+Direct Bayesian Inference,2,0,20,12.898309058030904
+Direct Bayesian Inference,2,0,30,12.898309058030904
+Improved UCB,2,0,5,3.0684963905794804
+Improved UCB,2,0,10,5.757701633863701
+Improved UCB,2,0,20,13.805692885518049
+Improved UCB,2,0,30,27.70318358478241
+Random Baseline,2,0,5,2.3269878652326614
+Random Baseline,2,0,10,6.741848586367881
+Random Baseline,2,0,20,18.945973889841174
+Random Baseline,2,0,30,31.173769071516798
+IRT decision rule,2,0,5,2.4298929927121167
+IRT decision rule,2,0,10,6.264534806147884
+IRT decision rule,2,0,20,18.467157881342946
+IRT decision rule,2,0,30,38.88683660231106
+Optimal Policy,2,1,5,0.0
+Optimal Policy,2,1,10,0.0
+Optimal Policy,2,1,20,0.0
+Optimal Policy,2,1,30,0.0
+Greedy Algorithm,2,1,5,1.5554495768483798
+Greedy Algorithm,2,1,10,1.7123463872446183
+Greedy Algorithm,2,1,20,7.793891925596606
+Greedy Algorithm,2,1,30,16.55793628152825
+Epsilon-Greedy,2,1,5,1.6056554969693004
+Epsilon-Greedy,2,1,10,2.8215102153103135
+Epsilon-Greedy,2,1,20,12.599803625412498
+Epsilon-Greedy,2,1,30,24.07732976106101
+GLM-UCB,2,1,5,1.3891352954859615
+GLM-UCB,2,1,10,3.471913431971375
+GLM-UCB,2,1,20,10.922531533303506
+GLM-UCB,2,1,30,21.707011572304623
+Fisher Information Exploration,2,1,5,1.5229354069238596
+Fisher Information Exploration,2,1,10,2.8488643566154126
+Fisher Information Exploration,2,1,20,9.305907541212509
+Fisher Information Exploration,2,1,30,23.091946585531083
+Classical Thompson Sampling,2,1,5,1.3918696951502065
+Classical Thompson Sampling,2,1,10,3.4575716501210554
+Classical Thompson Sampling,2,1,20,15.463227289536224
+Classical Thompson Sampling,2,1,30,30.836682565141928
+Direct Bayesian Inference,2,1,5,2.2784914844109774
+Direct Bayesian Inference,2,1,10,2.7500320354355257
+Direct Bayesian Inference,2,1,20,6.299830301291856
+Direct Bayesian Inference,2,1,30,12.930706020973597
+Improved UCB,2,1,5,2.825917885724869
+Improved UCB,2,1,10,4.261523431988732
+Improved UCB,2,1,20,6.464013667364835
+Improved UCB,2,1,30,12.07938224234545
+Random Baseline,2,1,5,2.1434306082872228
+Random Baseline,2,1,10,4.554469272445733
+Random Baseline,2,1,20,21.52812874514799
+Random Baseline,2,1,30,37.85488202952696
+IRT decision rule,2,1,5,1.3573230494790745
+IRT decision rule,2,1,10,5.805450283125708
+IRT decision rule,2,1,20,14.35882471299546
+IRT decision rule,2,1,30,22.136405492404634
